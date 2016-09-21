@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    This XML file allows us to easily customize the look and language used
+    in our program's user interface. Note that this properties file is only
+    for the standard controls for an app from the SimpleAppFramework, so
+    it would not include things initialized for the workspace, which is
+    customizable.
+-->
+<properties>
+    <property_list>
+        <property name="APP_WINDOW_WIDTH" value="800"/>
+        <property name="APP_WINDOW_HEIGHT" value="550"/>
+        <property name="APP_TITLE" value="Hangman"/>
+        <property name="APP_LOGO" value="Logo.png"/>
+        <property name="APP_PATH_CSS" value="css"/>
+        <property name="APP_CSS" value="hangman_style.css"/>
+        <property name="APP_SAVED_GAMES_PATH" value="work"/>
+
+        <!-- WORKSPACE CSS PROPERTIES -->
+        <property name="ROOT_BORDERPANE_ID" value="background"/>
+        <property name="TOP_TOOLBAR_ID" value="toolbar"/>
+        <property name="SEGMENTED_BUTTON_BAR" value="segmented-button-bar"/>
+        <property name="FIRST_TOOLBAR_BUTTON" value="first-toolbar-button"/>
+        <property name="LAST_TOOLBAR_BUTTON" value="last-toolbar-button"/>
+        <property name="HEADING_LABEL" value="heading-label"/>
+
+        <!-- PROGRAM ICON FILES -->
+        <property name="NEW_ICON" value="New.png"/>
+        <property name="LOAD_ICON" value="Load.png"/>
+        <property name="SAVE_ICON" value="Save.png"/>
+        <property name="EXIT_ICON" value="Exit.png"/>
+
+        <!-- TOOLTIPS FOR BUTTONS -->
+        <property name="NEW_TOOLTIP" value="Start a new game"/>
+        <property name="LOAD_TOOLTIP" value="Load a saved game"/>
+        <property name="SAVE_TOOLTIP" value="Save game"/>
+        <property name="EXIT_TOOLTIP" value="Exit application"/>
+
+        <!-- ERROR MESSAGES -->
+        <property name="CLOSE_BUTTON_TEXT" value="Close"/>
+
+        <property name="NEW_ERROR_TITLE" value="Creation Error"/>
+        <property name="NEW_ERROR_MESSAGE" value="An error occured starting a new game"/>
+        <property name="LOAD_ERROR_TITLE" value="Load Error"/>
+        <property name="LOAD_ERROR_MESSAGE" value="An error occured loading saved game"/>
+        <property name="SAVE_ERROR_TITLE" value="Save Error"/>
+        <property name="SAVE_ERROR_MESSAGE" value="An error occured saving game"/>
+        <property name="PROPERTIES_LOAD_ERROR_TITLE" value="Property Load Error"/>
+        <property name="PROPERTIES_LOAD_ERROR_MESSAGE" value="An error occured loading a property file."/>
+
+        <!-- VERIFICATION MESSAGES -->
+        <property name="NEW_COMPLETED_MESSAGE" value="New Game Ready"/>
+        <property name="NEW_COMPLETED_TITLE" value="New Game Created"/>
+        <property name="LOAD_COMPLETED_MESSAGE" value="Game Loaded"/>
+        <property name="LOAD_COMPLETED_TITLE" value="Loading Completed"/>
+        <property name="SAVE_COMPLETED_MESSAGE" value="Game Saved"/>
+        <property name="SAVE_COMPLETED_TITLE" value="Saving Completed"/>
+        <property name="SAVE_UNSAVED_WORK_MESSAGE" value="Would you like to save your progress so far?"/>
+        <property name="SAVE_UNSAVED_WORK_TITLE" value="Save progress?"/>
+
+        <property name="WORK_FILE_EXT" value="json"/>
+        <property name="WORK_FILE_EXT_DESC" value="Game File"/>
+        <property name="SAVE_WORK_TITLE" value="Save"/>
+        <property name="LOAD_WORK_TITLE" value="Select file to load"/>
+    </property_list>
+    <property_options_list/>
+</properties>

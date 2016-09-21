@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    This XML file allows us to easily customize the look and language used
+    in our program's user interface. Note that this properties file is only
+    for the workspace controls, which are custom for each application
+-->
+<properties>
+    <property_list>
+        <!-- PROGRAM ICON FILES -->
+        <property name="ADD_ICON" value="Add.png"/>
+        <property name="REMOVE_ICON" value="Remove.png"/>
+        <property name="MOVE_UP_ICON" value="MoveUp.png"/>
+        <property name="MOVE_DOWN_ICON" value="MoveDown.png"/>
+
+        <!-- TOOLTIPS FOR BUTTONS -->
+        <property name="ADD_ITEM_TOOLTIP" value="Select Background Color"/>
+        <property name="REMOVE_ITEM_TOOLTIP" value="Select Fill Color"/>
+        <property name="MOVE_UP_ITEM_TOOLTIP" value="Select Outline Color"/>
+        <property name="MOVE_DOWN_ITEM_TOOLTIP" value="Take Snapshot"/>
+
+        <!-- HEADINGS AND PROMPTS -->
+        <property name="WORKSPACE_HEADING_LABEL" value="Hangman"/>
+
+        <!-- TABLE COLUMN HEADINGS -->
+        <property name="CATEGORY_COLUMN_HEADING" value="Category"/>
+        <property name="DESCRIPTION_COLUMN_HEADING" value="Description"/>
+        <property name="START_DATE_COLUMN_HEADING" value="Start Date"/>
+        <property name="END_DATE_COLUMN_HEADING" value="End Date"/>
+        <property name="COMPLETED_COLUMN_HEADING" value="Completed"/>
+
+
+        <!-- ERROR MESSAGES AND TITLES FOR THEIR DIALOGS -->
+        <property name="ATTRIBUTE_UPDATE_ERROR_MESSAGE"
+                  value="WARNING: An error occured updating the element's attribute."/>
+        <property name="ATTRIBUTE_UPDATE_ERROR_TITLE" value="Attribute Update Error"/>
+        <property name="UPDATE_ERROR_MESSAGE" value="An error occured updating the UI"/>
+        <property name="UPDATE_ERROR_TITLE" value="UI Update Error"/>
+    </property_list>
+    <property_options_list>
+    </property_options_list>
+</properties>
