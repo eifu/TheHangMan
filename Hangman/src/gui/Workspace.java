@@ -119,7 +119,7 @@ public class Workspace extends AppWorkspaceComponent {
     /** This function reloads the entire workspace */
     @Override
     public void reloadWorkspace() {
-
+            // todo after load a file
     }
 
     public VBox getGameTextsPane() {

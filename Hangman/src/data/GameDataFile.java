@@ -1,8 +1,10 @@
 package data;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import components.AppDataComponent;
 import components.AppFileComponent;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 
@@ -16,8 +18,10 @@ public class GameDataFile implements AppFileComponent {
     public static final String BAD_GUESSES  = "BAD_GUESSES";
 
     @Override
-    public void saveData(AppDataComponent data, Path to) {
+    public void saveData(AppDataComponent data, Path to) throws IOException{
         // todo save data to the path. called from HangmanController.
+        ObjectMapper om = new ObjectMapper();
+        om.writeValue(new File(to.toString()), data);
     }
 
     @Override

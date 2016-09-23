@@ -9,10 +9,13 @@ import javafx.scene.control.Label;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.HBox;
 import javafx.scene.text.Text;
+import javafx.stage.FileChooser;
 import propertymanager.PropertyManager;
 import ui.AppMessageDialogSingleton;
 
+import java.io.File;
 import java.io.IOException;
+import java.net.URL;
 import java.nio.file.Path;
 
 import static settings.AppPropertyType.*;
@@ -95,7 +98,7 @@ public class HangmanController implements FileController {
                 appTemplate.getGUI().getPrimaryScene().setOnKeyTyped((KeyEvent event) -> {
                     char guess = event.getCharacter().charAt(0);
                     if (!alreadyGuessed(guess)) {
-                        boolean goodguess = false;
+                        boolean goodguess = false; // if guess is not in targetWord, goodguess is false
                         for (int i = 0; i < progress.length; i++) {
                             if (gamedata.getTargetWord().charAt(i) == guess) {
                                 progress[i].setVisible(true);
@@ -111,6 +114,8 @@ public class HangmanController implements FileController {
                         remains.setText(Integer.toString(gamedata.getRemainingGuesses()));
                     }
                 });
+
+                // if remainingGuess is <= 0 OR success, then it turns stop.
                 if (gamedata.getRemainingGuesses() <= 0 || success)
                     stop();
             }
@@ -163,7 +168,25 @@ public class HangmanController implements FileController {
     @Override
     public void handleSaveRequest() throws IOException {
         // todo use promptToSave to ask user the name of file to save. saveData from GameDataFile
+        boolean saved = false;
+        try {
 
+            if (workFile == null){
+                saved = promptToSave();
+            }else {
+                saved = save(workFile);
+            }
+
+        } catch (IOException ioe){
+            AppMessageDialogSingleton dialog = AppMessageDialogSingleton.getSingleton();
+            PropertyManager prop = PropertyManager.getManager();
+            dialog.show(prop.getPropertyValue(SAVE_ERROR_TITLE), prop.getPropertyValue(SAVE_ERROR_MESSAGE));
+        }
+        if (saved) {
+            AppMessageDialogSingleton dialog = AppMessageDialogSingleton.getSingleton();
+            PropertyManager prop = PropertyManager.getManager();
+            dialog.show(prop.getPropertyValue(SAVE_COMPLETED_TITLE), prop.getPropertyValue(SAVE_COMPLETED_MESSAGE));
+        }
     }
 
     @Override
@@ -192,7 +215,20 @@ public class HangmanController implements FileController {
     
     private boolean promptToSave() throws IOException {
         // todo setup input box and button box for user to type the name of saving file.
-        return false; // dummy placeholder
+        AppMessageDialogSingleton messageDialog   = AppMessageDialogSingleton.getSingleton();
+        PropertyManager           propertyManager = PropertyManager.getManager();
+
+        FileChooser fileChooser = new FileChooser();
+        fileChooser.setTitle(propertyManager.getPropertyValue(SAVE_WORK_TITLE));
+        File f = fileChooser.showSaveDialog(appTemplate.getGUI().getWindow());
+
+        if ( f != null ){
+            save(f.toPath());
+            workFile = f.toPath();
+            return true;
+        }else{
+            throw new IOException();
+        }
     }
 
     /**
@@ -202,7 +238,14 @@ public class HangmanController implements FileController {
      * @param target The file to which the work will be saved.
      * @throws IOException
      */
-    private void save(Path target) throws IOException {
+    private boolean save(Path target) throws IOException {
         // todo save data, update the tool bar, (disable save button, enable exit button)
+
+        try{
+            appTemplate.getFileComponent().saveData(gamedata, target);
+        }catch (IOException ioe){
+            return false;
+        }
+        return true;
     }
 }
