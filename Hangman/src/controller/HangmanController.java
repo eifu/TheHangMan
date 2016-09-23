@@ -68,6 +68,7 @@ public class HangmanController implements FileController {
         remainingGuessBox.getChildren().addAll(new Label("Remaining Guesses: "), remains);
         // since remainingGuessBox is HBox, as users click start playing, it adds horizontally.
         initWordGraphics(guessedLetters);
+        appTemplate.setAppFileController(this);
         play();
     }
 

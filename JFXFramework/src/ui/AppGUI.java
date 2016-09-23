@@ -16,6 +16,7 @@ import javafx.stage.Screen;
 import javafx.stage.Stage;
 import propertymanager.PropertyManager;
 
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
@@ -70,7 +71,9 @@ public class AppGUI implements AppStyleArbiter {
         this.primaryStage = primaryStage;
         this.applicationTitle = applicationTitle;
         initializeToolbar();                    // initialize the top toolbar
+
         initializeToolbarHandlers(appTemplate); // set the toolbar button handlers
+
         initializeWindow();                     // start the app window (without the application-specific workspace)
 
     }
@@ -118,6 +121,9 @@ public class AppGUI implements AppStyleArbiter {
             Class<?>       klass                        = Class.forName("controller." + fileControllerClassName);
             Constructor<?> constructor                  = klass.getConstructor(AppTemplate.class);
             fileController = (FileController) constructor.newInstance(app);
+
+
+
         } catch (NoSuchMethodException | InvocationTargetException | IllegalAccessException | ClassNotFoundException e) {
             e.printStackTrace();
             System.exit(1);
@@ -232,5 +238,9 @@ public class AppGUI implements AppStyleArbiter {
     @Override
     public void initStyle() {
         // currently, we do not provide any stylization at the framework-level
+    }
+
+    public void setFileController(FileController fc){
+        this.fileController = fc;
     }
 }
