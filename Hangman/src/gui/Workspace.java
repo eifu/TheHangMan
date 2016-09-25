@@ -142,4 +142,8 @@ public class Workspace extends AppWorkspaceComponent {
         gameTextsPane.getChildren().setAll(remainingGuessBox, guessedLetters);
         bodyPane.getChildren().setAll(figurePane, gameTextsPane);
     }
+
+    public void updateWorkspaceStartButton(boolean startable){
+        startGame.setDisable(!startable);
+    }
 }

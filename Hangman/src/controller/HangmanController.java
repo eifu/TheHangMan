@@ -95,6 +95,8 @@ public class HangmanController implements FileController {
     }
 
     public void play() {
+        Workspace gameWorkspace = (Workspace) appTemplate.getWorkspaceComponent();
+        gameWorkspace.updateWorkspaceStartButton(startable);
         AnimationTimer timer = new AnimationTimer() {
             @Override
             public void handle(long now) {
