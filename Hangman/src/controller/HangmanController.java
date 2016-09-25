@@ -15,9 +15,11 @@ import ui.AppMessageDialogSingleton;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URL;
 import java.nio.file.Path;
 
 import static settings.AppPropertyType.*;
+import static settings.InitializationParameters.APP_WORKDIR_PATH;
 
 /**
  * @author Ritwik Banerjee
@@ -234,8 +236,28 @@ public class HangmanController implements FileController {
         // todo setup input box and button box for user to type the name of saving file.
         PropertyManager           propertyManager = PropertyManager.getManager();
 
+
         FileChooser fileChooser = new FileChooser();
+
+        URL workDirURL  = AppTemplate.class.getClassLoader().getResource("");///Users/eifu/IdeaProjects/TheHangmanGame/out/production/Hangman/
+        File dir_f = new File(workDirURL.getPath()+"/saved");
+
+        if(!dir_f.exists() ) {
+            try {
+                dir_f.mkdir();
+            }catch (Exception e){
+                e.printStackTrace();
+            }
+        }
+
+
+        fileChooser.setInitialDirectory(dir_f);
         fileChooser.setTitle(propertyManager.getPropertyValue(SAVE_WORK_TITLE));
+
+        FileChooser.ExtensionFilter fileExtensions = new FileChooser.ExtensionFilter("JSON file","*.json");
+
+        fileChooser.getExtensionFilters().add(fileExtensions);
+
         File f = fileChooser.showSaveDialog(appTemplate.getGUI().getWindow());
 
         if ( f != null ){
