@@ -148,10 +148,10 @@ public class AppGUI implements AppStyleArbiter {
         exitButton.setOnAction(e -> fileController.handleExitRequest());
     }
 
-    public void updateWorkspaceToolbar(boolean savable) {
+    public void updateWorkspaceToolbar(boolean startable,boolean savable) {
         // todo add other boolean as inputs
         saveButton.setDisable(!savable);
-        newButton.setDisable(false);
+        newButton.setDisable(!startable);
         exitButton.setDisable(false);
     }
 

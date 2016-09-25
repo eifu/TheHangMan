@@ -32,6 +32,7 @@ public class HangmanController implements FileController {
     private Button      gameButton;  // shared reference to the "start game" button
     private Label       remains;     // dynamically updated label that indicates the number of remaining guesses
     private boolean     gameover;    // whether or not the current game is already over
+    private boolean     startable;
     private boolean     savable;
     private Path        workFile;
 
@@ -56,10 +57,11 @@ public class HangmanController implements FileController {
         gamedata = new GameData(appTemplate);
         gameover = false;
         success = false;
+        startable = false;
         savable = true;
         discovered = 0;
         Workspace gameWorkspace = (Workspace) appTemplate.getWorkspaceComponent();
-        appTemplate.getGUI().updateWorkspaceToolbar(savable);  // set toolbar save button disable if its not savable
+        appTemplate.getGUI().updateWorkspaceToolbar(startable, savable);  // set toolbar save button disable if its not savable
         HBox remainingGuessBox = gameWorkspace.getRemainingGuessBox();
         HBox guessedLetters    = (HBox) gameWorkspace.getGameTextsPane().getChildren().get(1);
 
@@ -76,8 +78,9 @@ public class HangmanController implements FileController {
         appTemplate.getGUI().getPrimaryScene().setOnKeyTyped(null);
         gameover = true;
         gameButton.setDisable(true);
+        startable = true;
         savable = false; // cannot save a game that is already over
-        appTemplate.getGUI().updateWorkspaceToolbar(savable);
+        appTemplate.getGUI().updateWorkspaceToolbar(startable,savable);
 
     }
 
@@ -113,6 +116,11 @@ public class HangmanController implements FileController {
                         success = (discovered == progress.length);
                         remains.setText(Integer.toString(gamedata.getRemainingGuesses()));
                     }
+                    if (savable == false) {
+                        startable = false;
+                        savable = true;
+                        appTemplate.getGUI().updateWorkspaceToolbar(startable, savable);
+                    }
                 });
 
                 // if remainingGuess is <= 0 OR success, then it turns stop.
@@ -120,9 +128,7 @@ public class HangmanController implements FileController {
                     stop();
 
 
-                savable = true;
             }
-
             @Override
             public void stop() {
                 super.stop();
@@ -160,7 +166,7 @@ public class HangmanController implements FileController {
 
         if (gameover) {
             savable = false;
-            appTemplate.getGUI().updateWorkspaceToolbar(savable);
+            appTemplate.getGUI().updateWorkspaceToolbar(startable,savable);
             Workspace gameWorkspace = (Workspace) appTemplate.getWorkspaceComponent();
             gameWorkspace.reinitialize();
             enableGameButton();
@@ -189,7 +195,10 @@ public class HangmanController implements FileController {
             AppMessageDialogSingleton dialog = AppMessageDialogSingleton.getSingleton();
             PropertyManager prop = PropertyManager.getManager();
             dialog.show(prop.getPropertyValue(SAVE_COMPLETED_TITLE), prop.getPropertyValue(SAVE_COMPLETED_MESSAGE));
+
             savable = false;
+            startable = true;
+            appTemplate.getGUI().updateWorkspaceToolbar(startable, savable);
         }
     }
 
@@ -221,7 +230,6 @@ public class HangmanController implements FileController {
     
     private boolean promptToSave() throws IOException {
         // todo setup input box and button box for user to type the name of saving file.
-        AppMessageDialogSingleton messageDialog   = AppMessageDialogSingleton.getSingleton();
         PropertyManager           propertyManager = PropertyManager.getManager();
 
         FileChooser fileChooser = new FileChooser();
