@@ -1,5 +1,7 @@
 package data;
 
+import com.fasterxml.jackson.core.JsonGenerationException;
+import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import components.AppDataComponent;
 import components.AppFileComponent;
@@ -21,7 +23,34 @@ public class GameDataFile implements AppFileComponent {
     public void saveData(AppDataComponent data, Path to) throws IOException{
         // todo save data to the path. called from HangmanController.
         ObjectMapper om = new ObjectMapper();
-        om.writeValue(new File(to.toString()), data);
+
+        GameData data_holder = new GameData(((GameData) data).getTargetWord(), ((GameData) data).getGoodGuesses(), ((GameData) data).getBadGuesses(), ((GameData) data).getRemainingGuesses());
+
+        try {
+            //Convert object to JSON string and save into file directly
+            om.writeValue(new File(to.toString()), data_holder);
+
+            //Convert object to JSON string
+            String jsonInString = om.writeValueAsString(data_holder);
+            System.out.println(jsonInString);
+
+            //Convert object to JSON string and pretty print
+            jsonInString = om.writerWithDefaultPrettyPrinter().writeValueAsString(data_holder);
+            System.out.println(jsonInString);
+
+
+        }  catch (JsonMappingException e) {
+            e.printStackTrace();
+        } catch (JsonGenerationException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+
+//        om.writeValue(new File(to.toString()), data);
+
+
     }
 
     @Override

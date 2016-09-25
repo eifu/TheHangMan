@@ -15,7 +15,6 @@ import ui.AppMessageDialogSingleton;
 
 import java.io.File;
 import java.io.IOException;
-import java.net.URL;
 import java.nio.file.Path;
 
 import static settings.AppPropertyType.*;
@@ -119,6 +118,9 @@ public class HangmanController implements FileController {
                 // if remainingGuess is <= 0 OR success, then it turns stop.
                 if (gamedata.getRemainingGuesses() <= 0 || success)
                     stop();
+
+
+                savable = true;
             }
 
             @Override
@@ -187,6 +189,7 @@ public class HangmanController implements FileController {
             AppMessageDialogSingleton dialog = AppMessageDialogSingleton.getSingleton();
             PropertyManager prop = PropertyManager.getManager();
             dialog.show(prop.getPropertyValue(SAVE_COMPLETED_TITLE), prop.getPropertyValue(SAVE_COMPLETED_MESSAGE));
+            savable = false;
         }
     }
 
@@ -199,8 +202,10 @@ public class HangmanController implements FileController {
     public void handleExitRequest() {
         try {
             boolean exit = true;
-            if (savable)
+            if (savable && workFile == null)
                 exit = promptToSave();
+            if (savable)
+                exit = save(workFile);
             if (exit)
                 System.exit(0);
         } catch (IOException ioe) {
