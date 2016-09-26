@@ -11,6 +11,7 @@ import javafx.scene.layout.HBox;
 import javafx.scene.text.Text;
 import javafx.stage.FileChooser;
 import propertymanager.PropertyManager;
+import settings.InitializationParameters;
 import ui.AppMessageDialogSingleton;
 
 import java.io.File;
@@ -180,7 +181,10 @@ public class HangmanController implements FileController {
     
     @Override
     public void handleSaveRequest() throws IOException {
-        // todo use promptToSave to ask user the name of file to save. saveData from GameDataFile
+        // check if user has saved before,
+        // if not, then prompt user to name the data.
+        // otherwise, just call save func.
+        // saved is true if saving completes without error.
         boolean saved = false;
         try {
 
@@ -193,13 +197,14 @@ public class HangmanController implements FileController {
         } catch (IOException ioe){
             AppMessageDialogSingleton dialog = AppMessageDialogSingleton.getSingleton();
             PropertyManager prop = PropertyManager.getManager();
+            dialog.setCloseButtonText(InitializationParameters.CLOSE_DIALOG_BUTTON_LABEL.getParameter());
             dialog.show(prop.getPropertyValue(SAVE_ERROR_TITLE), prop.getPropertyValue(SAVE_ERROR_MESSAGE));
         }
         if (saved) {
             AppMessageDialogSingleton dialog = AppMessageDialogSingleton.getSingleton();
             PropertyManager prop = PropertyManager.getManager();
+            dialog.setCloseButtonText(InitializationParameters.CLOSE_DIALOG_BUTTON_LABEL.getParameter());
             dialog.show(prop.getPropertyValue(SAVE_COMPLETED_TITLE), prop.getPropertyValue(SAVE_COMPLETED_MESSAGE));
-
             savable = false;
             startable = true;
             appTemplate.getGUI().updateWorkspaceToolbar(startable, savable);
@@ -224,6 +229,7 @@ public class HangmanController implements FileController {
         } catch (IOException ioe) {
             AppMessageDialogSingleton dialog = AppMessageDialogSingleton.getSingleton();
             PropertyManager           props  = PropertyManager.getManager();
+            dialog.setCloseButtonText(InitializationParameters.CLOSE_DIALOG_BUTTON_LABEL.getParameter());
             dialog.show(props.getPropertyValue(SAVE_ERROR_TITLE), props.getPropertyValue(SAVE_ERROR_MESSAGE));
         }
     }
@@ -233,15 +239,15 @@ public class HangmanController implements FileController {
     }
     
     private boolean promptToSave() throws IOException {
-        // todo setup input box and button box for user to type the name of saving file.
+        // this is called only when user has not saved the gameData yet.
+        //
         PropertyManager           propertyManager = PropertyManager.getManager();
-
-
         FileChooser fileChooser = new FileChooser();
 
-        URL workDirURL  = AppTemplate.class.getClassLoader().getResource("");///Users/eifu/IdeaProjects/TheHangmanGame/out/production/Hangman/
-        File dir_f = new File(workDirURL.getPath()+"/saved");
+        URL workDirURL  = AppTemplate.class.getClassLoader().getResource("");
+        File dir_f = new File(workDirURL.getPath()+"/saved"); // make a file path to default directory
 
+        // if the default directory does not exist, make the directory
         if(!dir_f.exists() ) {
             try {
                 dir_f.mkdir();
@@ -250,12 +256,11 @@ public class HangmanController implements FileController {
             }
         }
 
-
+        // set /saved directory as a default initial directory
         fileChooser.setInitialDirectory(dir_f);
         fileChooser.setTitle(propertyManager.getPropertyValue(SAVE_WORK_TITLE));
 
-        FileChooser.ExtensionFilter fileExtensions = new FileChooser.ExtensionFilter("JSON file","*.json");
-
+        FileChooser.ExtensionFilter fileExtensions = new FileChooser.ExtensionFilter("JSON file", "*.json");
         fileChooser.getExtensionFilters().add(fileExtensions);
 
         File f = fileChooser.showSaveDialog(appTemplate.getGUI().getWindow());
@@ -277,7 +282,9 @@ public class HangmanController implements FileController {
      * @throws IOException
      */
     private boolean save(Path target) throws IOException {
-        // todo save data, update the tool bar, (disable save button, enable exit button)
+        // save gameData(targetWord, goodGuess, badGuess, remainingGuesses)
+        // return true only when it successfully saved
+        // return false otherwise.
 
         try{
             appTemplate.getFileComponent().saveData(gamedata, target);

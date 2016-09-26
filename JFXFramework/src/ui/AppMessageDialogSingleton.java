@@ -94,4 +94,6 @@ public class AppMessageDialogSingleton extends Stage {
         // DO MORE WORK.
         showAndWait();
     }
+
+    public void setCloseButtonText(String s){closeButton.setText(s);}
 }

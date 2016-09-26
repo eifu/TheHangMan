@@ -40,13 +40,13 @@
         <property name="CLOSE_BUTTON_TEXT" value="Close"/>
 
         <property name="NEW_ERROR_TITLE" value="Creation Error"/>
-        <property name="NEW_ERROR_MESSAGE" value="An error occured starting a new game"/>
+        <property name="NEW_ERROR_MESSAGE" value="An error occurred starting a new game"/>
         <property name="LOAD_ERROR_TITLE" value="Load Error"/>
-        <property name="LOAD_ERROR_MESSAGE" value="An error occured loading saved game"/>
+        <property name="LOAD_ERROR_MESSAGE" value="An error occurred loading saved game"/>
         <property name="SAVE_ERROR_TITLE" value="Save Error"/>
-        <property name="SAVE_ERROR_MESSAGE" value="An error occured saving game"/>
+        <property name="SAVE_ERROR_MESSAGE" value="An error occurred saving game"/>
         <property name="PROPERTIES_LOAD_ERROR_TITLE" value="Property Load Error"/>
-        <property name="PROPERTIES_LOAD_ERROR_MESSAGE" value="An error occured loading a property file."/>
+        <property name="PROPERTIES_LOAD_ERROR_MESSAGE" value="An error occurred loading a property file."/>
 
         <!-- VERIFICATION MESSAGES -->
         <property name="NEW_COMPLETED_MESSAGE" value="New Game Ready"/>
