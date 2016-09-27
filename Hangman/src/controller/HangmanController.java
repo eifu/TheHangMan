@@ -280,38 +280,28 @@ public class HangmanController implements FileController {
             savable = false;
             appTemplate.getGUI().updateWorkspaceToolbar(startable, loadable, savable);  // update tool bar
 
+            gameover = false;
+            success = false;
 
             Workspace workspace = (Workspace) appTemplate.getWorkspaceComponent();
+            HBox guessedLetters = (HBox) workspace.getGameTextsPane().getChildren().get(1);
 
-            // did not play before.
-            if (startGameButton==null){
+            if (startGameButton==null){  // not played before
                 startGameButton = workspace.getStartGame();
-                HBox remainingGuessBox = workspace.getRemainingGuessBox();
-                HBox guessedLetters    = (HBox) workspace.getGameTextsPane().getChildren().get(1);
 
+                HBox remainingGuessBox = workspace.getRemainingGuessBox();
                 remains = new Label(Integer.toString(gamedata.getRemainingGuesses()));
                 remainingGuessBox.getChildren().addAll(new Label("Remaining Guesses: "), remains);
-                // since remainingGuessBox is HBox, as users click start playing, it adds horizontally.
-                reinitWordGraphics(guessedLetters);
-                ensureActivatedWorkspace();
-                appTemplate.setAppFileController(this);
 
 
-                // did play before.
-            }else {
-                gameover = false;
-                success = false;
-
-                HBox guessedLetters = (HBox) workspace.getGameTextsPane().getChildren().get(1);
-
+            }else {  // played before
                 remains.setText(Integer.toString(gamedata.getRemainingGuesses()));
-
-                // since remainingGuessBox is HBox, as users click start playing, it adds horizontally.
-                reinitWordGraphics(guessedLetters);
-                ensureActivatedWorkspace();                            // ensure workspace is activated
-                appTemplate.setAppFileController(this);
-
             }
+
+            reinitWordGraphics(guessedLetters);
+            ensureActivatedWorkspace();
+            appTemplate.setAppFileController(this);
+
             workFile = f_open.toPath();
             play();
         }
@@ -325,8 +315,12 @@ public class HangmanController implements FileController {
                 exit = promptToSave();
             if (savable)
                 exit = save(workFile);
-            if (exit)
+            if (exit) {
+                AppMessageDialogSingleton dialog = AppMessageDialogSingleton.getSingleton();
+                PropertyManager props = PropertyManager.getManager();
+                dialog.show(props.getPropertyValue(SAVE_COMPLETED_TITLE), props.getPropertyValue(SAVE_COMPLETED_MESSAGE));
                 System.exit(0);
+            }
         } catch (IOException ioe) {
             AppMessageDialogSingleton dialog = AppMessageDialogSingleton.getSingleton();
             PropertyManager           props  = PropertyManager.getManager();
