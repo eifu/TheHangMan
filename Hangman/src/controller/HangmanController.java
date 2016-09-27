@@ -234,34 +234,40 @@ public class HangmanController implements FileController {
         }
     }
 
+    private FileChooser savedDefaultFileChooser(){
+        PropertyManager           propertyManager = PropertyManager.getManager();
+        FileChooser   fileChooser = new FileChooser();
+        URL workDirURL  = AppTemplate.class.getClassLoader().getResource("");
+        File dir_f = new File(workDirURL.getPath()+APP_WORKDIR_PATH.getParameter());
+        // make a file path to default directory
+
+        // if the default directory does not exist, make the directory
+        if(!dir_f.exists() ) {
+            try {
+                dir_f.mkdir();
+            }catch (Exception e){
+                e.printStackTrace();
+            }
+        }
+
+        // set /saved directory as a default initial directory
+        fileChooser.setInitialDirectory(dir_f);
+        fileChooser.setTitle(propertyManager.getPropertyValue(SAVE_WORK_TITLE));
+
+        FileChooser.ExtensionFilter fileExtensions = new FileChooser.ExtensionFilter("JSON file", "*.json");
+        fileChooser.getExtensionFilters().add(fileExtensions);
+
+        return fileChooser;
+
+    }
+
     @Override
     public void handleLoadRequest() throws IOException {
         boolean loaded = false;
         File f_open = null;
         try{
             if (!savable){
-                PropertyManager           propertyManager = PropertyManager.getManager();
-                FileChooser   fileChooser = new FileChooser();
-
-                URL workDirURL  = AppTemplate.class.getClassLoader().getResource("");
-                File dir_f = new File(workDirURL.getPath()+APP_WORKDIR_PATH.getParameter());
-                // make a file path to default directory
-
-                // if the default directory does not exist, make the directory
-                if(!dir_f.exists() ) {
-                    try {
-                        dir_f.mkdir();
-                    }catch (Exception e){
-                        e.printStackTrace();
-                    }
-                }
-
-                // set /saved directory as a default initial directory
-                fileChooser.setInitialDirectory(dir_f);
-                fileChooser.setTitle(propertyManager.getPropertyValue(SAVE_WORK_TITLE));
-
-                FileChooser.ExtensionFilter fileExtensions = new FileChooser.ExtensionFilter("JSON file", "*.json");
-                fileChooser.getExtensionFilters().add(fileExtensions);
+                FileChooser   fileChooser = savedDefaultFileChooser();
                 gamedata = new GameData(appTemplate);
                 f_open = fileChooser.showOpenDialog(appTemplate.getGUI().getWindow());
                 if (f_open != null) {
@@ -293,7 +299,6 @@ public class HangmanController implements FileController {
                 remains = new Label(Integer.toString(gamedata.getRemainingGuesses()));
                 remainingGuessBox.getChildren().addAll(new Label("Remaining Guesses: "), remains);
 
-
             }else {  // played before
                 remains.setText(Integer.toString(gamedata.getRemainingGuesses()));
             }
@@ -304,6 +309,10 @@ public class HangmanController implements FileController {
 
             workFile = f_open.toPath();
             play();
+        }else{
+            if (workFile!=null) {
+                appTemplate.getFileComponent().loadData(gamedata, workFile);
+            }
         }
     }
     
@@ -311,14 +320,21 @@ public class HangmanController implements FileController {
     public void handleExitRequest() {
         try {
             boolean exit = true;
-            if (savable && workFile == null)
-                exit = promptToSave();
-            if (savable)
-                exit = save(workFile);
+            if (savable){
+                if( workFile == null){
+                    exit = promptToSave();
+                }else {
+                    exit = save(workFile);
+                }
+
+                if (exit){
+                    AppMessageDialogSingleton dialog = AppMessageDialogSingleton.getSingleton();
+                    PropertyManager props = PropertyManager.getManager();
+                    dialog.show(props.getPropertyValue(SAVE_COMPLETED_TITLE), props.getPropertyValue(SAVE_COMPLETED_MESSAGE));
+                }
+            }
+
             if (exit) {
-                AppMessageDialogSingleton dialog = AppMessageDialogSingleton.getSingleton();
-                PropertyManager props = PropertyManager.getManager();
-                dialog.show(props.getPropertyValue(SAVE_COMPLETED_TITLE), props.getPropertyValue(SAVE_COMPLETED_MESSAGE));
                 System.exit(0);
             }
         } catch (IOException ioe) {
@@ -335,29 +351,8 @@ public class HangmanController implements FileController {
     
     private boolean promptToSave() throws IOException {
         // this is called only when user has not saved the gameData yet.
-        //
-        PropertyManager           propertyManager = PropertyManager.getManager();
-        FileChooser fileChooser = new FileChooser();
 
-        URL workDirURL  = AppTemplate.class.getClassLoader().getResource("");
-        File dir_f = new File(workDirURL.getPath()+APP_WORKDIR_PATH.getParameter()); // make a file path to default directory
-
-        // if the default directory does not exist, make the directory
-        if(!dir_f.exists() ) {
-            try {
-                dir_f.mkdir();
-            }catch (Exception e){
-                e.printStackTrace();
-            }
-        }
-
-        // set /saved directory as a default initial directory
-        fileChooser.setInitialDirectory(dir_f);
-        fileChooser.setTitle(propertyManager.getPropertyValue(SAVE_WORK_TITLE));
-
-        FileChooser.ExtensionFilter fileExtensions = new FileChooser.ExtensionFilter("JSON file", "*.json");
-        fileChooser.getExtensionFilters().add(fileExtensions);
-
+        FileChooser fileChooser = savedDefaultFileChooser();
         File f = fileChooser.showSaveDialog(appTemplate.getGUI().getWindow());
 
         if ( f != null ){
