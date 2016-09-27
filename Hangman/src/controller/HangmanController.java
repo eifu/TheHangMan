@@ -39,6 +39,7 @@ public class HangmanController implements FileController {
     private boolean     loadable;
     private boolean     savable;
     private Path        workFile;
+    private boolean     played;
     private AnimationTimer timer;
 
     public HangmanController(AppTemplate appTemplate, Button startGameButton) {
@@ -86,6 +87,7 @@ public class HangmanController implements FileController {
         }
         appTemplate.getGUI().getPrimaryScene().setOnKeyTyped(null);
         gameover = true;
+        played = false;
         startGameButton.setDisable(true);
         startable = true;
         loadable = true;
@@ -121,6 +123,7 @@ public class HangmanController implements FileController {
     }
 
     public void play() {
+        played = true;
         timer = new AnimationTimer() {
             @Override
             public void handle(long now) {
@@ -274,7 +277,7 @@ public class HangmanController implements FileController {
                 gamedata = new GameData(appTemplate);
                 f_open = fileChooser.showOpenDialog(appTemplate.getGUI().getWindow());
                 if (f_open != null) {
-                    if (startGameButton!=null && !gameover) {
+                    if (played) {
                         timer.stop();
                     }
                     loaded = load(f_open.toPath());
@@ -287,6 +290,11 @@ public class HangmanController implements FileController {
             dialog.show(props.getPropertyValue(PROPERTIES_LOAD_ERROR_TITLE), props.getPropertyValue(PROPERTIES_LOAD_ERROR_MESSAGE));
         }
         if (loaded){
+            AppMessageDialogSingleton dialog = AppMessageDialogSingleton.getSingleton();
+            PropertyManager prop = PropertyManager.getManager();
+            dialog.setCloseButtonText(InitializationParameters.CLOSE_DIALOG_BUTTON_LABEL.getParameter());
+            dialog.show(prop.getPropertyValue(LOAD_COMPLETED_TITLE), prop.getPropertyValue(LOAD_COMPLETED_MESSAGE));
+
             startable = true;
             loadable = true;
             savable = false;
@@ -298,7 +306,7 @@ public class HangmanController implements FileController {
             Workspace workspace = (Workspace) appTemplate.getWorkspaceComponent();
             HBox guessedLetters = (HBox) workspace.getGameTextsPane().getChildren().get(1);
 
-            if (startGameButton==null){  // not played before
+            if (!played){  // not played before
                 startGameButton = workspace.getStartGame();
 
                 HBox remainingGuessBox = workspace.getRemainingGuessBox();
@@ -320,6 +328,17 @@ public class HangmanController implements FileController {
         }else{
             if (workFile!=null) {
                 appTemplate.getFileComponent().loadData(gamedata, workFile);
+            }
+            if (played) {
+                timer.start();
+                gameover = false;
+                startGameButton.setDisable(false);
+                startable = true;
+                loadable = true;
+                savable = false;
+                appTemplate.getGUI().updateWorkspaceToolbar(startable, loadable, savable);
+            }else{
+                play();
             }
         }
     }
