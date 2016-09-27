@@ -10,7 +10,6 @@ import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.HBox;
 import javafx.scene.text.Text;
 import javafx.stage.FileChooser;
-import org.omg.PortableInterceptor.SYSTEM_EXCEPTION;
 import propertymanager.PropertyManager;
 import settings.InitializationParameters;
 import ui.AppMessageDialogSingleton;
@@ -33,7 +32,7 @@ public class HangmanController implements FileController {
     private Text[]      progress;    // reference to the text area for the word
     private boolean     success;     // whether or not player was successful
     private int         discovered;  // the number of letters already discovered
-    private Button      gameButton;  // shared reference to the "start game" button
+    private Button startGameButton;  // shared reference to the "start game" button
     private Label       remains;     // dynamically updated label that indicates the number of remaining guesses
     private boolean     gameover;    // whether or not the current game is already over
     private boolean     startable;
@@ -41,9 +40,9 @@ public class HangmanController implements FileController {
     private boolean     savable;
     private Path        workFile;
 
-    public HangmanController(AppTemplate appTemplate, Button gameButton) {
+    public HangmanController(AppTemplate appTemplate, Button startGameButton) {
         this(appTemplate);
-        this.gameButton = gameButton;
+        this.startGameButton = startGameButton;
     }
 
     public HangmanController(AppTemplate appTemplate) {
@@ -51,11 +50,11 @@ public class HangmanController implements FileController {
     }
 
     public void enableGameButton() {
-        if (gameButton == null) {
+        if (startGameButton == null) {
             Workspace workspace = (Workspace) appTemplate.getWorkspaceComponent();
-            gameButton = workspace.getStartGame();
+            startGameButton = workspace.getStartGame();
         }
-        gameButton.setDisable(false);
+        startGameButton.setDisable(false);
     }
 
     public void start() {
@@ -83,7 +82,7 @@ public class HangmanController implements FileController {
         System.out.println(success ? "You win!" : "Ah, close but not quite there. The word was \"" + gamedata.getTargetWord() + "\".");
         appTemplate.getGUI().getPrimaryScene().setOnKeyTyped(null);
         gameover = true;
-        gameButton.setDisable(true);
+        startGameButton.setDisable(true);
         startable = true;
         loadable = true;
         savable = false; // cannot save a game that is already over
@@ -104,9 +103,13 @@ public class HangmanController implements FileController {
     private void reinitWordGraphics(HBox guessedLetters){
         char[] targetword = gamedata.getTargetWord().toCharArray();
         progress = new Text[targetword.length];
+        discovered = 0;
         for (int i = 0; i<progress.length; i++){
             progress[i] = new Text(Character.toString(targetword[i]));
-            if (!gamedata.getGoodGuesses().contains(targetword[i])){
+            if (gamedata.getGoodGuesses().contains(targetword[i])){
+                progress[i].setVisible(true);
+                discovered ++;
+            }else{
                 progress[i].setVisible(false);
             }
         }
@@ -277,6 +280,10 @@ public class HangmanController implements FileController {
             savable = false;
             loadable = true;
             startable = true;
+            if (startGameButton == null) {
+                Workspace workspace = (Workspace) appTemplate.getWorkspaceComponent();
+                startGameButton = workspace.getStartGame();
+            }
             appTemplate.getGUI().updateWorkspaceToolbar(startable, loadable, savable);
             Workspace gameWorkspace = (Workspace) appTemplate.getWorkspaceComponent();
             gameWorkspace.reinitialize();
