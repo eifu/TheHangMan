@@ -97,7 +97,7 @@ public class HangmanController implements FileController {
             progress[i] = new Text(Character.toString(targetword[i]));
             progress[i].setVisible(false); // make them invisible first.
         }
-        guessedLetters.getChildren().addAll(progress);
+        guessedLetters.getChildren().setAll(progress);
     }
 
     private void reinitWordGraphics(HBox guessedLetters){
@@ -113,7 +113,7 @@ public class HangmanController implements FileController {
                 progress[i].setVisible(false);
             }
         }
-        guessedLetters.getChildren().addAll(progress);
+        guessedLetters.getChildren().setAll(progress);
     }
 
     public void play() {
@@ -237,16 +237,15 @@ public class HangmanController implements FileController {
     @Override
     public void handleLoadRequest() throws IOException {
         boolean loaded = false;
+        File f_open = null;
         try{
-            if (savable){
-                System.out.println("a");
-            }else{
-
+            if (!savable){
                 PropertyManager           propertyManager = PropertyManager.getManager();
-                FileChooser fileChooser = new FileChooser();
+                FileChooser   fileChooser = new FileChooser();
 
                 URL workDirURL  = AppTemplate.class.getClassLoader().getResource("");
-                File dir_f = new File(workDirURL.getPath()+APP_WORKDIR_PATH.getParameter()); // make a file path to default directory
+                File dir_f = new File(workDirURL.getPath()+APP_WORKDIR_PATH.getParameter());
+                // make a file path to default directory
 
                 // if the default directory does not exist, make the directory
                 if(!dir_f.exists() ) {
@@ -264,38 +263,56 @@ public class HangmanController implements FileController {
                 FileChooser.ExtensionFilter fileExtensions = new FileChooser.ExtensionFilter("JSON file", "*.json");
                 fileChooser.getExtensionFilters().add(fileExtensions);
                 gamedata = new GameData(appTemplate);
-                File f = fileChooser.showOpenDialog(appTemplate.getGUI().getWindow());
-                if (f != null) {
-                    loaded = load(f.toPath());
+                f_open = fileChooser.showOpenDialog(appTemplate.getGUI().getWindow());
+                if (f_open != null) {
+                    loaded = load(f_open.toPath());
                 }
             }
         }catch (IOException ioe){
-            System.out.println(ioe.toString());
             AppMessageDialogSingleton dialog = AppMessageDialogSingleton.getSingleton();
             PropertyManager           props  = PropertyManager.getManager();
             dialog.setCloseButtonText(InitializationParameters.CLOSE_DIALOG_BUTTON_LABEL.getParameter());
             dialog.show(props.getPropertyValue(PROPERTIES_LOAD_ERROR_TITLE), props.getPropertyValue(PROPERTIES_LOAD_ERROR_MESSAGE));
         }
         if (loaded){
-            savable = false;
-            loadable = true;
             startable = true;
-            if (startGameButton == null) {
-                Workspace workspace = (Workspace) appTemplate.getWorkspaceComponent();
-                startGameButton = workspace.getStartGame();
-            }
-            appTemplate.getGUI().updateWorkspaceToolbar(startable, loadable, savable);
-            Workspace gameWorkspace = (Workspace) appTemplate.getWorkspaceComponent();
-            gameWorkspace.reinitialize();
-            HBox remainingGuessBox = gameWorkspace.getRemainingGuessBox();
-            HBox guessedLetters    = (HBox) gameWorkspace.getGameTextsPane().getChildren().get(1);
+            loadable = true;
+            savable = false;
+            appTemplate.getGUI().updateWorkspaceToolbar(startable, loadable, savable);  // update tool bar
 
-            remains = new Label(Integer.toString(gamedata.getRemainingGuesses()));
-            remainingGuessBox.getChildren().addAll(new Label("Remaining Guesses: "), remains);
-            // since remainingGuessBox is HBox, as users click start playing, it adds horizontally.
-            reinitWordGraphics(guessedLetters);
-            ensureActivatedWorkspace();                            // ensure workspace is activated
-            appTemplate.setAppFileController(this);
+
+            Workspace workspace = (Workspace) appTemplate.getWorkspaceComponent();
+
+            // did not play before.
+            if (startGameButton==null){
+                startGameButton = workspace.getStartGame();
+                HBox remainingGuessBox = workspace.getRemainingGuessBox();
+                HBox guessedLetters    = (HBox) workspace.getGameTextsPane().getChildren().get(1);
+
+                remains = new Label(Integer.toString(gamedata.getRemainingGuesses()));
+                remainingGuessBox.getChildren().addAll(new Label("Remaining Guesses: "), remains);
+                // since remainingGuessBox is HBox, as users click start playing, it adds horizontally.
+                reinitWordGraphics(guessedLetters);
+                ensureActivatedWorkspace();
+                appTemplate.setAppFileController(this);
+
+
+                // did play before.
+            }else {
+                gameover = false;
+                success = false;
+
+                HBox guessedLetters = (HBox) workspace.getGameTextsPane().getChildren().get(1);
+
+                remains.setText(Integer.toString(gamedata.getRemainingGuesses()));
+
+                // since remainingGuessBox is HBox, as users click start playing, it adds horizontally.
+                reinitWordGraphics(guessedLetters);
+                ensureActivatedWorkspace();                            // ensure workspace is activated
+                appTemplate.setAppFileController(this);
+
+            }
+            workFile = f_open.toPath();
             play();
         }
     }
