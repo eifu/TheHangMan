@@ -137,14 +137,14 @@ public class HangmanController implements FileController {
                         if (!goodguess)
                             gamedata.addBadGuess(guess);
 
+                        if (!savable) {
+                            startable = false;
+                            loadable = false;
+                            savable = true;
+                            appTemplate.getGUI().updateWorkspaceToolbar(startable, loadable, savable);
+                        }
                         success = (discovered == progress.length);
                         remains.setText(Integer.toString(gamedata.getRemainingGuesses()));
-                    }
-                    if (savable == false) {
-                        startable = false;
-                        loadable = false;
-                        savable = true;
-                        appTemplate.getGUI().updateWorkspaceToolbar(startable, loadable, savable);
                     }
                 });
 
