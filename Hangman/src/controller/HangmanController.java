@@ -89,10 +89,10 @@ public class HangmanController implements FileController {
     private void end() {
         if (gamedata.getRemainingGuesses() <= 0 ||(discovered == progress.length) ) {
             System.out.println(success ? "You win!" : "Ah, close but not quite there. The word was \"" + gamedata.getTargetWord() + "\".");
+            played = false;
         }
         appTemplate.getGUI().getPrimaryScene().setOnKeyTyped(null);
         gameover = true;
-        played = false;
         startGameButton.setDisable(true);
         startable = true;
         loadable = true;
@@ -161,8 +161,6 @@ public class HangmanController implements FileController {
                 // if remainingGuess is <= 0 OR success, then it turns stop.
                 if (gamedata.getRemainingGuesses() <= 0 || success)
                     stop();
-
-
             }
             @Override
             public void stop() {
@@ -342,7 +340,6 @@ public class HangmanController implements FileController {
                 loadable = true;
                 savable = false;
                 appTemplate.getGUI().updateWorkspaceToolbar(startable, loadable, savable);
-            }else{
                 play();
             }
         }
@@ -358,15 +355,12 @@ public class HangmanController implements FileController {
                 }else {
                     exit = save(workFile);
                 }
-
-                if (exit){
-                    AppMessageDialogSingleton dialog = AppMessageDialogSingleton.getSingleton();
-                    PropertyManager props = PropertyManager.getManager();
-                    dialog.show(props.getPropertyValue(SAVE_COMPLETED_TITLE), props.getPropertyValue(SAVE_COMPLETED_MESSAGE));
-                }
             }
 
             if (exit) {
+                AppMessageDialogSingleton dialog = AppMessageDialogSingleton.getSingleton();
+                PropertyManager props = PropertyManager.getManager();
+                dialog.show(props.getPropertyValue(EXIT_COMPLETED_TITLE), props.getPropertyValue(EXIT_COMPLETED_MESSAGE));
                 System.exit(0);
             }
         } catch (IOException ioe) {

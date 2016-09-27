@@ -58,7 +58,7 @@ public class GameDataFile implements AppFileComponent {
         } catch(IOException e){
             AppMessageDialogSingleton dialog = AppMessageDialogSingleton.getSingleton();
             PropertyManager           props  = PropertyManager.getManager();
-            dialog.setCloseButtonText(InitializationParameters.CLOSE_DIALOG_BUTTON_LABEL.getParameter());
+            dialog.setCloseButtonText(InitializationParameters.WRONG_JSON_DIALOG_BUTTON_LABEL.getParameter());
             dialog.show(props.getPropertyValue(PROPERTIES_LOAD_ERROR_TITLE), props.getPropertyValue(PROPERTIES_LOAD_ERROR_MESSAGE));
             throw new IOException();
         }

@@ -57,6 +57,8 @@
         <property name="SAVE_COMPLETED_TITLE" value="Saving Completed"/>
         <property name="SAVE_UNSAVED_WORK_MESSAGE" value="Would you like to save your progress so far?"/>
         <property name="SAVE_UNSAVED_WORK_TITLE" value="Save progress?"/>
+        <property name="EXIT_COMPLETED_TITLE" value="Game exited"/>
+        <property name="EXIT_COMPLETED_MESSAGE" value="Exiting Completed"/>
 
         <property name="WORK_FILE_EXT" value="json"/>
         <property name="WORK_FILE_EXT_DESC" value="Game File"/>
