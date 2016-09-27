@@ -24,6 +24,7 @@ import static settings.InitializationParameters.APP_WORKDIR_PATH;
 
 /**
  * @author Ritwik Banerjee
+ * @author Eifu Tomita
  */
 public class HangmanController implements FileController {
 

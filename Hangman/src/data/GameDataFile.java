@@ -19,6 +19,7 @@ import static settings.AppPropertyType.PROPERTIES_LOAD_ERROR_TITLE;
 
 /**
  * @author Ritwik Banerjee
+ * @author Eifu Tomita
  */
 public class GameDataFile implements AppFileComponent {
 

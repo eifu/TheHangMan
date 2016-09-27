@@ -2,6 +2,7 @@ package settings;
 
 /**
  * @author Ritwik Banerjee
+ * @author Eifu Tomita
  */
 public enum InitializationParameters {
 

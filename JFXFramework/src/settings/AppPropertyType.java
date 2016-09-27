@@ -5,7 +5,7 @@ package settings;
  * XML files to be used for setting up the application.
  *
  * @author Richard McKenna, Ritwik Banerjee
- * @author ?
+ * @author Eifu Tomita
  * @version 1.0
  */
 @SuppressWarnings("unused")

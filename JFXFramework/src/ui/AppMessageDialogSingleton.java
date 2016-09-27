@@ -18,7 +18,7 @@ import settings.InitializationParameters;
  * with a message, and a single ok button.
  *
  * @author Richard McKenna, Ritwik Banerjee
- * @author ?
+ * @author Eifu Tomita
  * @version 1.0
  */
 public class AppMessageDialogSingleton extends Stage {

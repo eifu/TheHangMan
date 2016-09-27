@@ -36,6 +36,7 @@ import static settings.InitializationParameters.APP_IMAGEDIR_PATH;
  * include the workspace, which should be customizable and application dependent.
  *
  * @author Richard McKenna, Ritwik Banerjee
+ * @author Eifu Tomita
  */
 public class AppGUI implements AppStyleArbiter {
 

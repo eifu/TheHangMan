@@ -23,6 +23,7 @@ import static settings.InitializationParameters.*;
 
 /**
  * @author Richard McKenna, Ritwik Banerjee
+ * @author Eifu Tomita
  */
 public abstract class AppTemplate extends Application {
 
