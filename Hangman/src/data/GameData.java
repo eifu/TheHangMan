@@ -122,7 +122,9 @@ public class GameData implements AppDataComponent {
     public void addBadGuess(char c) {
         if (!badGuesses.contains(c)) {
             badGuesses.add(c);
-            remainingGuesses--;
+            if (remainingGuesses>0) {
+                remainingGuesses--;
+            }
         }
     }
 

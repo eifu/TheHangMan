@@ -39,6 +39,7 @@ public class HangmanController implements FileController {
     private boolean     loadable;
     private boolean     savable;
     private Path        workFile;
+    private AnimationTimer timer;
 
     public HangmanController(AppTemplate appTemplate, Button startGameButton) {
         this(appTemplate);
@@ -75,11 +76,14 @@ public class HangmanController implements FileController {
         // since remainingGuessBox is HBox, as users click start playing, it adds horizontally.
         initWordGraphics(guessedLetters);
         appTemplate.setAppFileController(this);
+        gameWorkspace.updateWorkspaceStartButton(startable);
         play();
     }
 
     private void end() {
-        System.out.println(success ? "You win!" : "Ah, close but not quite there. The word was \"" + gamedata.getTargetWord() + "\".");
+        if (gamedata.getRemainingGuesses() <= 0 ||(discovered == progress.length) ) {
+            System.out.println(success ? "You win!" : "Ah, close but not quite there. The word was \"" + gamedata.getTargetWord() + "\".");
+        }
         appTemplate.getGUI().getPrimaryScene().setOnKeyTyped(null);
         gameover = true;
         startGameButton.setDisable(true);
@@ -117,9 +121,7 @@ public class HangmanController implements FileController {
     }
 
     public void play() {
-        Workspace gameWorkspace = (Workspace) appTemplate.getWorkspaceComponent();
-        gameWorkspace.updateWorkspaceStartButton(startable);
-        AnimationTimer timer = new AnimationTimer() {
+        timer = new AnimationTimer() {
             @Override
             public void handle(long now) {
                 appTemplate.getGUI().getPrimaryScene().setOnKeyTyped((KeyEvent event) -> {
@@ -265,12 +267,16 @@ public class HangmanController implements FileController {
     public void handleLoadRequest() throws IOException {
         boolean loaded = false;
         File f_open = null;
+
         try{
             if (!savable){
                 FileChooser   fileChooser = savedDefaultFileChooser();
                 gamedata = new GameData(appTemplate);
                 f_open = fileChooser.showOpenDialog(appTemplate.getGUI().getWindow());
                 if (f_open != null) {
+                    if (startGameButton!=null && !gameover) {
+                        timer.stop();
+                    }
                     loaded = load(f_open.toPath());
                 }
             }
@@ -297,7 +303,7 @@ public class HangmanController implements FileController {
 
                 HBox remainingGuessBox = workspace.getRemainingGuessBox();
                 remains = new Label(Integer.toString(gamedata.getRemainingGuesses()));
-                remainingGuessBox.getChildren().addAll(new Label("Remaining Guesses: "), remains);
+                remainingGuessBox.getChildren().setAll(new Label("Remaining Guesses: "), remains);
 
             }else {  // played before
                 remains.setText(Integer.toString(gamedata.getRemainingGuesses()));
@@ -308,6 +314,8 @@ public class HangmanController implements FileController {
             appTemplate.setAppFileController(this);
 
             workFile = f_open.toPath();
+
+            workspace.updateWorkspaceStartButton(false);
             play();
         }else{
             if (workFile!=null) {

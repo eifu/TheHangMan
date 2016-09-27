@@ -39,12 +39,9 @@ public class GameDataFile implements AppFileComponent {
         try {
             //Convert object to JSON string and save into file directly
             om.writeValue(new File(to.toString()), data_holder);
-        }  catch (JsonMappingException e) {
-            e.printStackTrace();
-        } catch (JsonGenerationException e) {
-            e.printStackTrace();
         } catch (IOException e) {
             e.printStackTrace();
+            throw new IOException();
         }
     }
 
