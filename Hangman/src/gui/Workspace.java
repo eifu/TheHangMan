@@ -13,6 +13,7 @@ import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
+import javafx.scene.text.Text;
 import propertymanager.PropertyManager;
 import ui.AppGUI;
 
@@ -54,6 +55,8 @@ public class Workspace extends AppWorkspaceComponent {
         layoutGUI();     // initialize all the workspace (GUI) components including the containers and their layout
         setupHandlers(); // ... and set up event handling
     }
+
+
 
     /**
      * initialize all the workspace (GUI) components including the containers and their layout
@@ -119,7 +122,9 @@ public class Workspace extends AppWorkspaceComponent {
     /** This function reloads the entire workspace */
     @Override
     public void reloadWorkspace() {
+
             // todo after load a file
+
     }
 
     public VBox getGameTextsPane() {

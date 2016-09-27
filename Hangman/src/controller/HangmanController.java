@@ -10,6 +10,7 @@ import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.HBox;
 import javafx.scene.text.Text;
 import javafx.stage.FileChooser;
+import org.omg.PortableInterceptor.SYSTEM_EXCEPTION;
 import propertymanager.PropertyManager;
 import settings.InitializationParameters;
 import ui.AppMessageDialogSingleton;
@@ -36,6 +37,7 @@ public class HangmanController implements FileController {
     private Label       remains;     // dynamically updated label that indicates the number of remaining guesses
     private boolean     gameover;    // whether or not the current game is already over
     private boolean     startable;
+    private boolean     loadable;
     private boolean     savable;
     private Path        workFile;
 
@@ -61,10 +63,11 @@ public class HangmanController implements FileController {
         gameover = false;
         success = false;
         startable = false;
+        loadable = false;
         savable = true;
         discovered = 0;
         Workspace gameWorkspace = (Workspace) appTemplate.getWorkspaceComponent();
-        appTemplate.getGUI().updateWorkspaceToolbar(startable, savable);  // set toolbar save button disable if its not savable
+        appTemplate.getGUI().updateWorkspaceToolbar(startable, loadable, savable);  // set toolbar save button disable if its not savable
         HBox remainingGuessBox = gameWorkspace.getRemainingGuessBox();
         HBox guessedLetters    = (HBox) gameWorkspace.getGameTextsPane().getChildren().get(1);
 
@@ -82,8 +85,9 @@ public class HangmanController implements FileController {
         gameover = true;
         gameButton.setDisable(true);
         startable = true;
+        loadable = true;
         savable = false; // cannot save a game that is already over
-        appTemplate.getGUI().updateWorkspaceToolbar(startable,savable);
+        appTemplate.getGUI().updateWorkspaceToolbar(startable, loadable, savable);
 
     }
 
@@ -93,6 +97,18 @@ public class HangmanController implements FileController {
         for (int i = 0; i < progress.length; i++) {
             progress[i] = new Text(Character.toString(targetword[i]));
             progress[i].setVisible(false); // make them invisible first.
+        }
+        guessedLetters.getChildren().addAll(progress);
+    }
+
+    private void reinitWordGraphics(HBox guessedLetters){
+        char[] targetword = gamedata.getTargetWord().toCharArray();
+        progress = new Text[targetword.length];
+        for (int i = 0; i<progress.length; i++){
+            progress[i] = new Text(Character.toString(targetword[i]));
+            if (!gamedata.getGoodGuesses().contains(targetword[i])){
+                progress[i].setVisible(false);
+            }
         }
         guessedLetters.getChildren().addAll(progress);
     }
@@ -123,8 +139,9 @@ public class HangmanController implements FileController {
                     }
                     if (savable == false) {
                         startable = false;
+                        loadable = false;
                         savable = true;
-                        appTemplate.getGUI().updateWorkspaceToolbar(startable, savable);
+                        appTemplate.getGUI().updateWorkspaceToolbar(startable, loadable, savable);
                     }
                 });
 
@@ -170,8 +187,10 @@ public class HangmanController implements FileController {
         }
 
         if (gameover) {
+            startable = true;
+            loadable = true;
             savable = false;
-            appTemplate.getGUI().updateWorkspaceToolbar(startable,savable);
+            appTemplate.getGUI().updateWorkspaceToolbar(startable,loadable, savable);
             Workspace gameWorkspace = (Workspace) appTemplate.getWorkspaceComponent();
             gameWorkspace.reinitialize();
             enableGameButton();
@@ -206,14 +225,72 @@ public class HangmanController implements FileController {
             dialog.setCloseButtonText(InitializationParameters.CLOSE_DIALOG_BUTTON_LABEL.getParameter());
             dialog.show(prop.getPropertyValue(SAVE_COMPLETED_TITLE), prop.getPropertyValue(SAVE_COMPLETED_MESSAGE));
             savable = false;
+            loadable = true;
             startable = true;
-            appTemplate.getGUI().updateWorkspaceToolbar(startable, savable);
+            appTemplate.getGUI().updateWorkspaceToolbar(startable, loadable, savable);
         }
     }
 
     @Override
-    public void handleLoadRequest() {
+    public void handleLoadRequest() throws IOException {
+        boolean loaded = false;
+        try{
+            if (savable){
+                System.out.println("a");
+            }else{
 
+                PropertyManager           propertyManager = PropertyManager.getManager();
+                FileChooser fileChooser = new FileChooser();
+
+                URL workDirURL  = AppTemplate.class.getClassLoader().getResource("");
+                File dir_f = new File(workDirURL.getPath()+APP_WORKDIR_PATH.getParameter()); // make a file path to default directory
+
+                // if the default directory does not exist, make the directory
+                if(!dir_f.exists() ) {
+                    try {
+                        dir_f.mkdir();
+                    }catch (Exception e){
+                        e.printStackTrace();
+                    }
+                }
+
+                // set /saved directory as a default initial directory
+                fileChooser.setInitialDirectory(dir_f);
+                fileChooser.setTitle(propertyManager.getPropertyValue(SAVE_WORK_TITLE));
+
+                FileChooser.ExtensionFilter fileExtensions = new FileChooser.ExtensionFilter("JSON file", "*.json");
+                fileChooser.getExtensionFilters().add(fileExtensions);
+                gamedata = new GameData(appTemplate);
+                File f = fileChooser.showOpenDialog(appTemplate.getGUI().getWindow());
+                if (f != null) {
+                    loaded = load(f.toPath());
+                }
+            }
+        }catch (IOException ioe){
+            System.out.println(ioe.toString());
+            AppMessageDialogSingleton dialog = AppMessageDialogSingleton.getSingleton();
+            PropertyManager           props  = PropertyManager.getManager();
+            dialog.setCloseButtonText(InitializationParameters.CLOSE_DIALOG_BUTTON_LABEL.getParameter());
+            dialog.show(props.getPropertyValue(PROPERTIES_LOAD_ERROR_TITLE), props.getPropertyValue(PROPERTIES_LOAD_ERROR_MESSAGE));
+        }
+        if (loaded){
+            savable = false;
+            loadable = true;
+            startable = true;
+            appTemplate.getGUI().updateWorkspaceToolbar(startable, loadable, savable);
+            Workspace gameWorkspace = (Workspace) appTemplate.getWorkspaceComponent();
+            gameWorkspace.reinitialize();
+            HBox remainingGuessBox = gameWorkspace.getRemainingGuessBox();
+            HBox guessedLetters    = (HBox) gameWorkspace.getGameTextsPane().getChildren().get(1);
+
+            remains = new Label(Integer.toString(gamedata.getRemainingGuesses()));
+            remainingGuessBox.getChildren().addAll(new Label("Remaining Guesses: "), remains);
+            // since remainingGuessBox is HBox, as users click start playing, it adds horizontally.
+            reinitWordGraphics(guessedLetters);
+            ensureActivatedWorkspace();                            // ensure workspace is activated
+            appTemplate.setAppFileController(this);
+            play();
+        }
     }
     
     @Override
@@ -245,7 +322,7 @@ public class HangmanController implements FileController {
         FileChooser fileChooser = new FileChooser();
 
         URL workDirURL  = AppTemplate.class.getClassLoader().getResource("");
-        File dir_f = new File(workDirURL.getPath()+"/saved"); // make a file path to default directory
+        File dir_f = new File(workDirURL.getPath()+APP_WORKDIR_PATH.getParameter()); // make a file path to default directory
 
         // if the default directory does not exist, make the directory
         if(!dir_f.exists() ) {
@@ -288,6 +365,19 @@ public class HangmanController implements FileController {
 
         try{
             appTemplate.getFileComponent().saveData(gamedata, target);
+        }catch (IOException ioe){
+            return false;
+        }
+        return true;
+    }
+
+
+    private boolean load(Path target) throws IOException{
+        try{
+            if (gamedata == null){
+                gamedata = new GameData(appTemplate);
+            }
+            appTemplate.getFileComponent().loadData(gamedata,target);
         }catch (IOException ioe){
             return false;
         }
