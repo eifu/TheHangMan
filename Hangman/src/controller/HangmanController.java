@@ -79,6 +79,10 @@ public class HangmanController implements FileController {
         initWordGraphics(guessedLetters);
         appTemplate.setAppFileController(this);
         gameWorkspace.updateWorkspaceStartButton(startable);
+        AppMessageDialogSingleton dialog = AppMessageDialogSingleton.getSingleton();
+        PropertyManager prop = PropertyManager.getManager();
+        dialog.setCloseButtonText(InitializationParameters.CLOSE_DIALOG_BUTTON_LABEL.getParameter());
+        dialog.show(prop.getPropertyValue(NEW_COMPLETED_TITLE), prop.getPropertyValue(NEW_COMPLETED_MESSAGE));
         play();
     }
 
