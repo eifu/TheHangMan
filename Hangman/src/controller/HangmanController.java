@@ -13,6 +13,7 @@ import javafx.stage.FileChooser;
 import propertymanager.PropertyManager;
 import settings.InitializationParameters;
 import ui.AppMessageDialogSingleton;
+import ui.YesNoCancelDialogSingleton;
 
 import java.io.File;
 import java.io.IOException;
@@ -215,30 +216,43 @@ public class HangmanController implements FileController {
         // if not, then prompt user to name the data.
         // otherwise, just call save func.
         // saved is true if saving completes without error.
-        boolean saved = false;
-        try {
+        PropertyManager            propertyManager   = PropertyManager.getManager();
+        YesNoCancelDialogSingleton yesNoCancelDialog = YesNoCancelDialogSingleton.getSingleton();
 
-            if (workFile == null){
-                saved = promptToSave();
-            }else {
-                saved = save(workFile);
+        yesNoCancelDialog.show(propertyManager.getPropertyValue(SAVE_UNSAVED_WORK_TITLE),
+                propertyManager.getPropertyValue(SAVE_UNSAVED_WORK_MESSAGE));
+
+        if (yesNoCancelDialog.getSelection().equals(YesNoCancelDialogSingleton.YES)) {
+            boolean saved = false;
+            try {
+
+                if (workFile == null) {
+                    saved = promptToSave();
+                } else {
+                    saved = save(workFile);
+                }
+
+            } catch (IOException ioe) {
+                AppMessageDialogSingleton dialog = AppMessageDialogSingleton.getSingleton();
+                PropertyManager prop = PropertyManager.getManager();
+                dialog.setCloseButtonText(InitializationParameters.CLOSE_DIALOG_BUTTON_LABEL.getParameter());
+                dialog.show(prop.getPropertyValue(SAVE_CANCEL_TITLE), prop.getPropertyValue(SAVE_CANCEL_MESSAGE));
             }
-
-        } catch (IOException ioe){
+            if (saved) {
+                AppMessageDialogSingleton dialog = AppMessageDialogSingleton.getSingleton();
+                PropertyManager prop = PropertyManager.getManager();
+                dialog.setCloseButtonText(InitializationParameters.CLOSE_DIALOG_BUTTON_LABEL.getParameter());
+                dialog.show(prop.getPropertyValue(SAVE_COMPLETED_TITLE), prop.getPropertyValue(SAVE_COMPLETED_MESSAGE));
+                savable = false;
+                loadable = true;
+                startable = true;
+                appTemplate.getGUI().updateWorkspaceToolbar(startable, loadable, savable);
+            }
+        }else{
             AppMessageDialogSingleton dialog = AppMessageDialogSingleton.getSingleton();
             PropertyManager prop = PropertyManager.getManager();
             dialog.setCloseButtonText(InitializationParameters.CLOSE_DIALOG_BUTTON_LABEL.getParameter());
-            dialog.show(prop.getPropertyValue(SAVE_ERROR_TITLE), prop.getPropertyValue(SAVE_ERROR_MESSAGE));
-        }
-        if (saved) {
-            AppMessageDialogSingleton dialog = AppMessageDialogSingleton.getSingleton();
-            PropertyManager prop = PropertyManager.getManager();
-            dialog.setCloseButtonText(InitializationParameters.CLOSE_DIALOG_BUTTON_LABEL.getParameter());
-            dialog.show(prop.getPropertyValue(SAVE_COMPLETED_TITLE), prop.getPropertyValue(SAVE_COMPLETED_MESSAGE));
-            savable = false;
-            loadable = true;
-            startable = true;
-            appTemplate.getGUI().updateWorkspaceToolbar(startable, loadable, savable);
+            dialog.show(prop.getPropertyValue(SAVE_CANCEL_TITLE), prop.getPropertyValue(SAVE_CANCEL_MESSAGE));
         }
     }
 
@@ -262,7 +276,10 @@ public class HangmanController implements FileController {
         fileChooser.setInitialDirectory(dir_f);
         fileChooser.setTitle(propertyManager.getPropertyValue(SAVE_WORK_TITLE));
 
-        FileChooser.ExtensionFilter fileExtensions = new FileChooser.ExtensionFilter("JSON file", "*.json");
+        String desc = propertyManager.getPropertyValue(WORK_FILE_EXT_DESC);
+        String ext = propertyManager.getPropertyValue(WORK_FILE_EXT);
+        FileChooser.ExtensionFilter fileExtensions = new FileChooser.ExtensionFilter(String.format("%s (*.%s)", desc, ext),
+                                                                                     String.format("*.%s",ext));
         fileChooser.getExtensionFilters().add(fileExtensions);
 
         return fileChooser;
@@ -367,7 +384,7 @@ public class HangmanController implements FileController {
             AppMessageDialogSingleton dialog = AppMessageDialogSingleton.getSingleton();
             PropertyManager           props  = PropertyManager.getManager();
             dialog.setCloseButtonText(InitializationParameters.CLOSE_DIALOG_BUTTON_LABEL.getParameter());
-            dialog.show(props.getPropertyValue(SAVE_ERROR_TITLE), props.getPropertyValue(SAVE_ERROR_MESSAGE));
+            dialog.show(props.getPropertyValue(SAVE_CANCEL_TITLE), props.getPropertyValue(SAVE_CANCEL_MESSAGE));
         }
     }
 

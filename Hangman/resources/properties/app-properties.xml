@@ -38,7 +38,8 @@
 
         <!-- ERROR MESSAGES -->
         <property name="CLOSE_BUTTON_TEXT" value="Close"/>
-
+        <property name="SAVE_CANCEL_TITLE" value="Save cancel"/>
+        <property name="SAVE_CANCEL_MESSAGE" value="You have to save before starting new game, loading, or exiting."/>
         <property name="NEW_ERROR_TITLE" value="Creation Error"/>
         <property name="NEW_ERROR_MESSAGE" value="An error occurred starting a new game"/>
         <property name="LOAD_ERROR_TITLE" value="Load Error"/>
