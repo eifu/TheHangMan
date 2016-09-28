@@ -350,9 +350,11 @@ public class HangmanController implements FileController {
                 appTemplate.getFileComponent().loadData(gamedata, workFile);
             }
             if (played) {
+                Workspace workspace = (Workspace) appTemplate.getWorkspaceComponent();
                 timer.start();
                 gameover = false;
                 startGameButton.setDisable(false);
+                workspace.updateWorkspaceStartButton(false);
                 startable = true;
                 loadable = true;
                 savable = false;

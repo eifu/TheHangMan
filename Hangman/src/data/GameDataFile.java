@@ -14,8 +14,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 
-import static settings.AppPropertyType.PROPERTIES_LOAD_ERROR_MESSAGE;
-import static settings.AppPropertyType.PROPERTIES_LOAD_ERROR_TITLE;
+import static settings.AppPropertyType.*;
 
 /**
  * @author Ritwik Banerjee
@@ -56,6 +55,28 @@ public class GameDataFile implements AppFileComponent {
                     .setBadGuesses(data_loaded.getBadGuesses())
                     .setRemainingGuesses(data_loaded.getRemainingGuesses());
         } catch(IOException e){
+            AppMessageDialogSingleton dialog = AppMessageDialogSingleton.getSingleton();
+            PropertyManager           props  = PropertyManager.getManager();
+            dialog.setCloseButtonText(InitializationParameters.CLOSE_DIALOG_BUTTON_LABEL.getParameter());
+            dialog.show(props.getPropertyValue(LOAD_ERROR_TITLE), props.getPropertyValue(LOAD_ERROR_MESSAGE));
+            throw new IOException();
+        }
+        validateData(data);
+    }
+
+    private void validateData(AppDataComponent data) throws IOException{
+        GameData gameData = (GameData) data;
+        try{
+            if (gameData.getGoodGuesses().size() >= 10){
+                throw new IOException();
+            }else if (gameData.getBadGuesses().size() >= 10){
+                throw new IOException();
+            }else if (gameData.getRemainingGuesses() >=10){
+                throw new IOException();
+            }else if (gameData.getTargetWord().length() == 0){
+                throw new IOException();
+            }
+        }catch(IOException e){
             AppMessageDialogSingleton dialog = AppMessageDialogSingleton.getSingleton();
             PropertyManager           props  = PropertyManager.getManager();
             dialog.setCloseButtonText(InitializationParameters.WRONG_JSON_DIALOG_BUTTON_LABEL.getParameter());
