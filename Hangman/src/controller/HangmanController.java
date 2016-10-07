@@ -4,139 +4,145 @@ import apptemplate.AppTemplate;
 import data.GameData;
 import gui.Workspace;
 import javafx.animation.AnimationTimer;
+import javafx.application.Platform;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.HBox;
 import javafx.scene.text.Text;
 import javafx.stage.FileChooser;
+import javafx.stage.FileChooser.ExtensionFilter;
 import propertymanager.PropertyManager;
-import settings.InitializationParameters;
 import ui.AppMessageDialogSingleton;
 import ui.YesNoCancelDialogSingleton;
 
 import java.io.File;
 import java.io.IOException;
-import java.net.URL;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 
 import static settings.AppPropertyType.*;
 import static settings.InitializationParameters.APP_WORKDIR_PATH;
 
 /**
  * @author Ritwik Banerjee
- * @author Eifu Tomita
  */
 public class HangmanController implements FileController {
 
+    public enum GameState {
+        UNINITIALIZED,
+        INITIALIZED_UNMODIFIED,
+        INITIALIZED_MODIFIED,
+        ENDED
+    }
+
     private AppTemplate appTemplate; // shared reference to the application
     private GameData    gamedata;    // shared reference to the game being played, loaded or saved
+    private GameState   gamestate;   // the state of the game being shown in the workspace
     private Text[]      progress;    // reference to the text area for the word
     private boolean     success;     // whether or not player was successful
     private int         discovered;  // the number of letters already discovered
-    private Button startGameButton;  // shared reference to the "start game" button
+    private Button      gameButton;  // shared reference to the "start game" button
     private Label       remains;     // dynamically updated label that indicates the number of remaining guesses
-    private boolean     gameover;    // whether or not the current game is already over
-    private boolean     startable;
-    private boolean     loadable;
-    private boolean     savable;
     private Path        workFile;
-    private boolean     played;
-    private AnimationTimer timer;
 
-    public HangmanController(AppTemplate appTemplate, Button startGameButton) {
+    public HangmanController(AppTemplate appTemplate, Button gameButton) {
         this(appTemplate);
-        this.startGameButton = startGameButton;
+        this.gameButton = gameButton;
     }
 
     public HangmanController(AppTemplate appTemplate) {
         this.appTemplate = appTemplate;
+        this.gamestate = GameState.UNINITIALIZED;
     }
 
     public void enableGameButton() {
-        if (startGameButton == null) {
+        if (gameButton == null) {
             Workspace workspace = (Workspace) appTemplate.getWorkspaceComponent();
-            startGameButton = workspace.getStartGame();
+            gameButton = workspace.getStartGame();
         }
-        startGameButton.setDisable(false);
+        gameButton.setDisable(false);
     }
 
+    public void disableGameButton() {
+        if (gameButton == null) {
+            Workspace workspace = (Workspace) appTemplate.getWorkspaceComponent();
+            gameButton = workspace.getStartGame();
+        }
+        gameButton.setDisable(true);
+    }
+
+    public void setGameState(GameState gamestate) {
+        this.gamestate = gamestate;
+    }
+
+    public GameState getGamestate() {
+        return this.gamestate;
+    }
+
+    /**
+     * In the homework code given to you, we had the line
+     * gamedata = new GameData(appTemplate, true);
+     * This meant that the 'gamedata' variable had access to the app, but the data component of the app was still
+     * the empty game data! What we need is to change this so that our 'gamedata' refers to the data component of
+     * the app, instead of being a new object of type GameData. There are several ways of doing this. One of which
+     * is to write (and use) the GameData#init() method.
+     */
     public void start() {
-        gamedata = new GameData(appTemplate);
-        gameover = false;
+        gamedata = (GameData) appTemplate.getDataComponent();
         success = false;
-        startable = false;
-        loadable = false;
-        savable = true;
         discovered = 0;
+
         Workspace gameWorkspace = (Workspace) appTemplate.getWorkspaceComponent();
-        appTemplate.getGUI().updateWorkspaceToolbar(startable, loadable, savable);  // set toolbar save button disable if its not savable
+
+        gamedata.init();
+        setGameState(GameState.INITIALIZED_UNMODIFIED);
         HBox remainingGuessBox = gameWorkspace.getRemainingGuessBox();
         HBox guessedLetters    = (HBox) gameWorkspace.getGameTextsPane().getChildren().get(1);
-
         remains = new Label(Integer.toString(GameData.TOTAL_NUMBER_OF_GUESSES_ALLOWED));
         remainingGuessBox.getChildren().addAll(new Label("Remaining Guesses: "), remains);
-        // since remainingGuessBox is HBox, as users click start playing, it adds horizontally.
         initWordGraphics(guessedLetters);
-        appTemplate.setAppFileController(this);
-        gameWorkspace.updateWorkspaceStartButton(startable);
-        AppMessageDialogSingleton dialog = AppMessageDialogSingleton.getSingleton();
-        PropertyManager prop = PropertyManager.getManager();
-        dialog.setCloseButtonText(InitializationParameters.CLOSE_DIALOG_BUTTON_LABEL.getParameter());
-        dialog.show(prop.getPropertyValue(NEW_COMPLETED_TITLE), prop.getPropertyValue(NEW_COMPLETED_MESSAGE));
         play();
     }
 
     private void end() {
-        if (gamedata.getRemainingGuesses() <= 0 ||(discovered == progress.length) ) {
-            System.out.println(success ? "You win!" : "Ah, close but not quite there. The word was \"" + gamedata.getTargetWord() + "\".");
-            played = false;
-        }
         appTemplate.getGUI().getPrimaryScene().setOnKeyTyped(null);
-        gameover = true;
-        startGameButton.setDisable(true);
-        startable = true;
-        loadable = true;
-        savable = false; // cannot save a game that is already over
-        appTemplate.getGUI().updateWorkspaceToolbar(startable, loadable, savable);
-
+        gameButton.setDisable(true);
+        setGameState(GameState.ENDED);
+        appTemplate.getGUI().updateWorkspaceToolbar(gamestate.equals(GameState.INITIALIZED_MODIFIED));
+        Platform.runLater(() -> {
+            PropertyManager           manager    = PropertyManager.getManager();
+            AppMessageDialogSingleton dialog     = AppMessageDialogSingleton.getSingleton();
+            String                    endMessage = manager.getPropertyValue(success ? GAME_WON_MESSAGE : GAME_LOST_MESSAGE);
+            if (!success)
+                endMessage += String.format(" (the word was \"%s\")", gamedata.getTargetWord());
+            if (dialog.isShowing())
+                dialog.toFront();
+            else
+                dialog.show(manager.getPropertyValue(GAME_OVER_TITLE), endMessage);
+        });
     }
 
     private void initWordGraphics(HBox guessedLetters) {
-        char[] targetword = gamedata.getTargetWord().toCharArray(); // ??? why do we need to cast to char[]?
+        char[] targetword = gamedata.getTargetWord().toCharArray();
         progress = new Text[targetword.length];
         for (int i = 0; i < progress.length; i++) {
             progress[i] = new Text(Character.toString(targetword[i]));
-            progress[i].setVisible(false); // make them invisible first.
+            progress[i].setVisible(false);
         }
-        guessedLetters.getChildren().setAll(progress);
-    }
-
-    private void reinitWordGraphics(HBox guessedLetters){
-        char[] targetword = gamedata.getTargetWord().toCharArray();
-        progress = new Text[targetword.length];
-        discovered = 0;
-        for (int i = 0; i<progress.length; i++){
-            progress[i] = new Text(Character.toString(targetword[i]));
-            if (gamedata.getGoodGuesses().contains(targetword[i])){
-                progress[i].setVisible(true);
-                discovered ++;
-            }else{
-                progress[i].setVisible(false);
-            }
-        }
-        guessedLetters.getChildren().setAll(progress);
+        guessedLetters.getChildren().addAll(progress);
     }
 
     public void play() {
-        played = true;
-        timer = new AnimationTimer() {
+        disableGameButton();
+        AnimationTimer timer = new AnimationTimer() {
             @Override
             public void handle(long now) {
+                appTemplate.getGUI().updateWorkspaceToolbar(gamestate.equals(GameState.INITIALIZED_MODIFIED));
                 appTemplate.getGUI().getPrimaryScene().setOnKeyTyped((KeyEvent event) -> {
                     char guess = event.getCharacter().charAt(0);
                     if (!alreadyGuessed(guess)) {
-                        boolean goodguess = false; // if guess is not in targetWord, goodguess is false
+                        boolean goodguess = false;
                         for (int i = 0; i < progress.length; i++) {
                             if (gamedata.getTargetWord().charAt(i) == guess) {
                                 progress[i].setVisible(true);
@@ -148,21 +154,15 @@ public class HangmanController implements FileController {
                         if (!goodguess)
                             gamedata.addBadGuess(guess);
 
-                        if (!savable) {
-                            startable = false;
-                            loadable = false;
-                            savable = true;
-                            appTemplate.getGUI().updateWorkspaceToolbar(startable, loadable, savable);
-                        }
                         success = (discovered == progress.length);
                         remains.setText(Integer.toString(gamedata.getRemainingGuesses()));
                     }
+                    setGameState(GameState.INITIALIZED_MODIFIED);
                 });
-
-                // if remainingGuess is <= 0 OR success, then it turns stop.
                 if (gamedata.getRemainingGuesses() <= 0 || success)
                     stop();
             }
+
             @Override
             public void stop() {
                 super.stop();
@@ -172,16 +172,45 @@ public class HangmanController implements FileController {
         timer.start();
     }
 
+    private void restoreGUI() {
+        disableGameButton();
+        Workspace gameWorkspace = (Workspace) appTemplate.getWorkspaceComponent();
+        gameWorkspace.reinitialize();
+
+        HBox guessedLetters = (HBox) gameWorkspace.getGameTextsPane().getChildren().get(1);
+        restoreWordGraphics(guessedLetters);
+
+        HBox remainingGuessBox = gameWorkspace.getRemainingGuessBox();
+        remains = new Label(Integer.toString(gamedata.getRemainingGuesses()));
+        remainingGuessBox.getChildren().addAll(new Label("Remaining Guesses: "), remains);
+
+        success = false;
+        play();
+    }
+
+    private void restoreWordGraphics(HBox guessedLetters) {
+        discovered = 0;
+        char[] targetword = gamedata.getTargetWord().toCharArray();
+        progress = new Text[targetword.length];
+        for (int i = 0; i < progress.length; i++) {
+            progress[i] = new Text(Character.toString(targetword[i]));
+            progress[i].setVisible(gamedata.getGoodGuesses().contains(progress[i].getText().charAt(0)));
+            if (progress[i].isVisible())
+                discovered++;
+        }
+        guessedLetters.getChildren().addAll(progress);
+    }
+
     private boolean alreadyGuessed(char c) {
         return gamedata.getGoodGuesses().contains(c) || gamedata.getBadGuesses().contains(c);
     }
-    
+
     @Override
     public void handleNewRequest() {
         AppMessageDialogSingleton messageDialog   = AppMessageDialogSingleton.getSingleton();
         PropertyManager           propertyManager = PropertyManager.getManager();
         boolean                   makenew         = true;
-        if (savable)
+        if (gamestate.equals(GameState.INITIALIZED_MODIFIED))
             try {
                 makenew = promptToSave();
             } catch (IOException e) {
@@ -192,221 +221,92 @@ public class HangmanController implements FileController {
             appTemplate.getWorkspaceComponent().reloadWorkspace(); // load data into workspace
             ensureActivatedWorkspace();                            // ensure workspace is activated
             workFile = null;                                       // new workspace has never been saved to a file
-
-            Workspace gameWorkspace = (Workspace) appTemplate.getWorkspaceComponent();
-            gameWorkspace.reinitialize();
+            ((Workspace) appTemplate.getWorkspaceComponent()).reinitialize();
             enableGameButton();
         }
-
-        if (gameover) {
-            startable = true;
-            loadable = true;
-            savable = false;
-            appTemplate.getGUI().updateWorkspaceToolbar(startable,loadable, savable);
+        if (gamestate.equals(GameState.ENDED)) {
+            appTemplate.getGUI().updateWorkspaceToolbar(false);
             Workspace gameWorkspace = (Workspace) appTemplate.getWorkspaceComponent();
             gameWorkspace.reinitialize();
-            enableGameButton();
         }
 
     }
-    
+
     @Override
     public void handleSaveRequest() throws IOException {
-        // check if user has saved before,
-        // if not, then prompt user to name the data.
-        // otherwise, just call save func.
-        // saved is true if saving completes without error.
-        PropertyManager            propertyManager   = PropertyManager.getManager();
-        YesNoCancelDialogSingleton yesNoCancelDialog = YesNoCancelDialogSingleton.getSingleton();
-
-        yesNoCancelDialog.show(propertyManager.getPropertyValue(SAVE_UNSAVED_WORK_TITLE),
-                propertyManager.getPropertyValue(SAVE_UNSAVED_WORK_MESSAGE));
-
-        if (yesNoCancelDialog.getSelection().equals(YesNoCancelDialogSingleton.YES)) {
-            boolean saved = false;
-            try {
-
-                if (workFile == null) {
-                    saved = promptToSave();
-                } else {
-                    saved = save(workFile);
-                }
-
-            } catch (IOException ioe) {
-                AppMessageDialogSingleton dialog = AppMessageDialogSingleton.getSingleton();
-                PropertyManager prop = PropertyManager.getManager();
-                dialog.setCloseButtonText(InitializationParameters.CLOSE_DIALOG_BUTTON_LABEL.getParameter());
-                dialog.show(prop.getPropertyValue(SAVE_CANCEL_TITLE), prop.getPropertyValue(SAVE_CANCEL_MESSAGE));
-            }
-            if (saved) {
-                AppMessageDialogSingleton dialog = AppMessageDialogSingleton.getSingleton();
-                PropertyManager prop = PropertyManager.getManager();
-                dialog.setCloseButtonText(InitializationParameters.CLOSE_DIALOG_BUTTON_LABEL.getParameter());
-                dialog.show(prop.getPropertyValue(SAVE_COMPLETED_TITLE), prop.getPropertyValue(SAVE_COMPLETED_MESSAGE));
-                savable = false;
-                loadable = true;
-                startable = true;
-                appTemplate.getGUI().updateWorkspaceToolbar(startable, loadable, savable);
-            }
-        }else{
-            AppMessageDialogSingleton dialog = AppMessageDialogSingleton.getSingleton();
-            PropertyManager prop = PropertyManager.getManager();
-            dialog.setCloseButtonText(InitializationParameters.CLOSE_DIALOG_BUTTON_LABEL.getParameter());
-            dialog.show(prop.getPropertyValue(SAVE_CANCEL_TITLE), prop.getPropertyValue(SAVE_CANCEL_MESSAGE));
-        }
-    }
-
-    private FileChooser savedDefaultFileChooser(){
-        PropertyManager           propertyManager = PropertyManager.getManager();
-        FileChooser   fileChooser = new FileChooser();
-        URL workDirURL  = AppTemplate.class.getClassLoader().getResource("");
-        File dir_f = new File(workDirURL.getPath()+APP_WORKDIR_PATH.getParameter());
-        // make a file path to default directory
-
-        // if the default directory does not exist, make the directory
-        if(!dir_f.exists() ) {
-            try {
-                dir_f.mkdir();
-            }catch (Exception e){
-                e.printStackTrace();
-            }
-        }
-
-        // set /saved directory as a default initial directory
-        fileChooser.setInitialDirectory(dir_f);
-        fileChooser.setTitle(propertyManager.getPropertyValue(SAVE_WORK_TITLE));
-
-        String desc = propertyManager.getPropertyValue(WORK_FILE_EXT_DESC);
-        String ext = propertyManager.getPropertyValue(WORK_FILE_EXT);
-        FileChooser.ExtensionFilter fileExtensions = new FileChooser.ExtensionFilter(String.format("%s (*.%s)", desc, ext),
-                                                                                     String.format("*.%s",ext));
-        fileChooser.getExtensionFilters().add(fileExtensions);
-
-        return fileChooser;
-
+        PropertyManager propertyManager = PropertyManager.getManager();
+        if (workFile == null) {
+            FileChooser filechooser = new FileChooser();
+            Path        appDirPath  = Paths.get(propertyManager.getPropertyValue(APP_TITLE)).toAbsolutePath();
+            Path        targetPath  = appDirPath.resolve(APP_WORKDIR_PATH.getParameter());
+            filechooser.setInitialDirectory(targetPath.toFile());
+            filechooser.setTitle(propertyManager.getPropertyValue(SAVE_WORK_TITLE));
+            String description = propertyManager.getPropertyValue(WORK_FILE_EXT_DESC);
+            String extension   = propertyManager.getPropertyValue(WORK_FILE_EXT);
+            ExtensionFilter extFilter = new ExtensionFilter(String.format("%s (*.%s)", description, extension),
+                                                            String.format("*.%s", extension));
+            filechooser.getExtensionFilters().add(extFilter);
+            File selectedFile = filechooser.showSaveDialog(appTemplate.getGUI().getWindow());
+            if (selectedFile != null)
+                save(selectedFile.toPath());
+        } else
+            save(workFile);
     }
 
     @Override
     public void handleLoadRequest() throws IOException {
-        boolean loaded = false;
-        File f_open = null;
-
-        try{
-            if (!savable){
-                FileChooser   fileChooser = savedDefaultFileChooser();
-                gamedata = new GameData(appTemplate);
-                f_open = fileChooser.showOpenDialog(appTemplate.getGUI().getWindow());
-                if (f_open != null) {
-                    if (played) {
-                        timer.stop();
-                    }
-                    loaded = load(f_open.toPath());
-                }
-            }
-        }catch (IOException ioe){
-            AppMessageDialogSingleton dialog = AppMessageDialogSingleton.getSingleton();
-            PropertyManager           props  = PropertyManager.getManager();
-            dialog.setCloseButtonText(InitializationParameters.CLOSE_DIALOG_BUTTON_LABEL.getParameter());
-            dialog.show(props.getPropertyValue(PROPERTIES_LOAD_ERROR_TITLE), props.getPropertyValue(PROPERTIES_LOAD_ERROR_MESSAGE));
-        }
-        if (loaded){
-            AppMessageDialogSingleton dialog = AppMessageDialogSingleton.getSingleton();
-            PropertyManager prop = PropertyManager.getManager();
-            dialog.setCloseButtonText(InitializationParameters.CLOSE_DIALOG_BUTTON_LABEL.getParameter());
-            dialog.show(prop.getPropertyValue(LOAD_COMPLETED_TITLE), prop.getPropertyValue(LOAD_COMPLETED_MESSAGE));
-
-            startable = true;
-            loadable = true;
-            savable = false;
-            appTemplate.getGUI().updateWorkspaceToolbar(startable, loadable, savable);  // update tool bar
-
-            gameover = false;
-            success = false;
-
-            Workspace workspace = (Workspace) appTemplate.getWorkspaceComponent();
-            HBox guessedLetters = (HBox) workspace.getGameTextsPane().getChildren().get(1);
-
-            if (!played){  // not played before
-                startGameButton = workspace.getStartGame();
-
-                HBox remainingGuessBox = workspace.getRemainingGuessBox();
-                remains = new Label(Integer.toString(gamedata.getRemainingGuesses()));
-                remainingGuessBox.getChildren().setAll(new Label("Remaining Guesses: "), remains);
-
-            }else {  // played before
-                remains.setText(Integer.toString(gamedata.getRemainingGuesses()));
-            }
-
-            reinitWordGraphics(guessedLetters);
-            ensureActivatedWorkspace();
-            appTemplate.setAppFileController(this);
-
-            workFile = f_open.toPath();
-
-            workspace.updateWorkspaceStartButton(false);
-            play();
-        }else{
-            if (workFile!=null) {
-                appTemplate.getFileComponent().loadData(gamedata, workFile);
-            }
-            if (played) {
-                Workspace workspace = (Workspace) appTemplate.getWorkspaceComponent();
-                timer.start();
-                gameover = false;
-                startGameButton.setDisable(false);
-                workspace.updateWorkspaceStartButton(false);
-                startable = true;
-                loadable = true;
-                savable = false;
-                appTemplate.getGUI().updateWorkspaceToolbar(startable, loadable, savable);
-                play();
-            }
+        boolean load = true;
+        if (gamestate.equals(GameState.INITIALIZED_MODIFIED))
+            load = promptToSave();
+        if (load) {
+            PropertyManager propertyManager = PropertyManager.getManager();
+            FileChooser     filechooser     = new FileChooser();
+            Path            appDirPath      = Paths.get(propertyManager.getPropertyValue(APP_TITLE)).toAbsolutePath();
+            Path            targetPath      = appDirPath.resolve(APP_WORKDIR_PATH.getParameter());
+            filechooser.setInitialDirectory(targetPath.toFile());
+            filechooser.setTitle(propertyManager.getPropertyValue(LOAD_WORK_TITLE));
+            String description = propertyManager.getPropertyValue(WORK_FILE_EXT_DESC);
+            String extension   = propertyManager.getPropertyValue(WORK_FILE_EXT);
+            ExtensionFilter extFilter = new ExtensionFilter(String.format("%s (*.%s)", description, extension),
+                                                            String.format("*.%s", extension));
+            filechooser.getExtensionFilters().add(extFilter);
+            File selectedFile = filechooser.showOpenDialog(appTemplate.getGUI().getWindow());
+            if (selectedFile != null && selectedFile.exists())
+                load(selectedFile.toPath());
+            restoreGUI(); // restores the GUI to reflect the state in which the loaded game was last saved
         }
     }
-    
+
     @Override
     public void handleExitRequest() {
         try {
             boolean exit = true;
-            if (savable){
-                if( workFile == null){
-                    exit = promptToSave();
-                }else {
-                    exit = save(workFile);
-                }
-            }
-
-            if (exit) {
-                AppMessageDialogSingleton dialog = AppMessageDialogSingleton.getSingleton();
-                PropertyManager props = PropertyManager.getManager();
-                dialog.show(props.getPropertyValue(EXIT_COMPLETED_TITLE), props.getPropertyValue(EXIT_COMPLETED_MESSAGE));
+            if (gamestate.equals(GameState.INITIALIZED_MODIFIED))
+                exit = promptToSave();
+            if (exit)
                 System.exit(0);
-            }
         } catch (IOException ioe) {
             AppMessageDialogSingleton dialog = AppMessageDialogSingleton.getSingleton();
             PropertyManager           props  = PropertyManager.getManager();
-            dialog.setCloseButtonText(InitializationParameters.CLOSE_DIALOG_BUTTON_LABEL.getParameter());
-            dialog.show(props.getPropertyValue(SAVE_CANCEL_TITLE), props.getPropertyValue(SAVE_CANCEL_MESSAGE));
+            dialog.show(props.getPropertyValue(SAVE_ERROR_TITLE), props.getPropertyValue(SAVE_ERROR_MESSAGE));
         }
     }
 
     private void ensureActivatedWorkspace() {
         appTemplate.getWorkspaceComponent().activateWorkspace(appTemplate.getGUI().getAppPane());
     }
-    
+
     private boolean promptToSave() throws IOException {
-        // this is called only when user has not saved the gameData yet.
+        PropertyManager            propertyManager   = PropertyManager.getManager();
+        YesNoCancelDialogSingleton yesNoCancelDialog = YesNoCancelDialogSingleton.getSingleton();
 
-        FileChooser fileChooser = savedDefaultFileChooser();
-        File f = fileChooser.showSaveDialog(appTemplate.getGUI().getWindow());
+        yesNoCancelDialog.show(propertyManager.getPropertyValue(SAVE_UNSAVED_WORK_TITLE),
+                               propertyManager.getPropertyValue(SAVE_UNSAVED_WORK_MESSAGE));
 
-        if ( f != null ){
-            save(f.toPath());
-            workFile = f.toPath();
-            return true;
-        }else{
-            throw new IOException();
-        }
+        if (yesNoCancelDialog.getSelection().equals(YesNoCancelDialogSingleton.YES))
+            handleSaveRequest();
+
+        return !yesNoCancelDialog.getSelection().equals(YesNoCancelDialogSingleton.CANCEL);
     }
 
     /**
@@ -416,29 +316,38 @@ public class HangmanController implements FileController {
      * @param target The file to which the work will be saved.
      * @throws IOException
      */
-    private boolean save(Path target) throws IOException {
-        // save gameData(targetWord, goodGuess, badGuess, remainingGuesses)
-        // return true only when it successfully saved
-        // return false otherwise.
-
-        try{
-            appTemplate.getFileComponent().saveData(gamedata, target);
-        }catch (IOException ioe){
-            return false;
-        }
-        return true;
+    private void save(Path target) throws IOException {
+        appTemplate.getFileComponent().saveData(appTemplate.getDataComponent(), target);
+        workFile = target;
+        setGameState(GameState.INITIALIZED_UNMODIFIED);
+        AppMessageDialogSingleton dialog = AppMessageDialogSingleton.getSingleton();
+        PropertyManager           props  = PropertyManager.getManager();
+        dialog.show(props.getPropertyValue(SAVE_COMPLETED_TITLE), props.getPropertyValue(SAVE_COMPLETED_MESSAGE));
     }
 
+    /**
+     * A helper method to load saved game data. It loads the game data, notified the user, and then updates the GUI to
+     * reflect the correct state of the game.
+     *
+     * @param source The source data file from which the game is loaded.
+     * @throws IOException
+     */
+    private void load(Path source) throws IOException {
+        // load game data
+        appTemplate.getFileComponent().loadData(appTemplate.getDataComponent(), source);
 
-    private boolean load(Path target) throws IOException{
-        try{
-            if (gamedata == null){
-                gamedata = new GameData(appTemplate);
-            }
-            appTemplate.getFileComponent().loadData(gamedata,target);
-        }catch (IOException ioe){
-            return false;
-        }
-        return true;
+        // set the work file as the file from which the game was loaded
+        workFile = source;
+
+        // notify the user that load was successful
+        AppMessageDialogSingleton dialog = AppMessageDialogSingleton.getSingleton();
+        PropertyManager           props  = PropertyManager.getManager();
+        dialog.show(props.getPropertyValue(LOAD_COMPLETED_TITLE), props.getPropertyValue(LOAD_COMPLETED_MESSAGE));
+
+        setGameState(GameState.INITIALIZED_UNMODIFIED);
+        Workspace gameworkspace = (Workspace) appTemplate.getWorkspaceComponent();
+        ensureActivatedWorkspace();
+        gameworkspace.reinitialize();
+        gamedata = (GameData) appTemplate.getDataComponent();
     }
 }

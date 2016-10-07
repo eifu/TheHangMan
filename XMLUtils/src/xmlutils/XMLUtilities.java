@@ -61,7 +61,7 @@ public class XMLUtilities {
             // Here the schema is loaded from a java.io.File, but you could use 
             // a java.net.URL or a javax.xml.transform.Source instead.
             File   schemaLocation = new File(xmlSchemaNameAndPath);
-            String abs_path       = schemaLocation.getAbsolutePath();
+            String abs_path       = schemaLocation.getAbsolutePath(); // FIXME:path is wrong!
             Schema schema         = factory.newSchema(schemaLocation);
             
             // 3. Get a validator from the schema.

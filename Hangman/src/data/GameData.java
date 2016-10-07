@@ -1,7 +1,6 @@
 package data;
 
 import apptemplate.AppTemplate;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import components.AppDataComponent;
 import controller.GameError;
 
@@ -17,12 +16,11 @@ import java.util.stream.Stream;
 
 /**
  * @author Ritwik Banerjee
- * @author Eifu Tomita
  */
 public class GameData implements AppDataComponent {
 
     public static final  int TOTAL_NUMBER_OF_GUESSES_ALLOWED = 10;
-    private static final int TOTAL_NUMBER_OF_STORED_WORDS    = 330622;  // number of lines in words/words.txt
+    private static final int TOTAL_NUMBER_OF_STORED_WORDS    = 330622;
 
     private String         targetWord;
     private Set<Character> goodGuesses;
@@ -31,22 +29,26 @@ public class GameData implements AppDataComponent {
     public  AppTemplate    appTemplate;
 
     public GameData(AppTemplate appTemplate) {
-        this.appTemplate = appTemplate;
+        this(appTemplate, false);
+    }
+
+    public GameData(AppTemplate appTemplate, boolean initiateGame) {
+        if (initiateGame) {
+            this.appTemplate = appTemplate;
+            this.targetWord = setTargetWord();
+            this.goodGuesses = new HashSet<>();
+            this.badGuesses = new HashSet<>();
+            this.remainingGuesses = TOTAL_NUMBER_OF_GUESSES_ALLOWED;
+        } else {
+            this.appTemplate = appTemplate;
+        }
+    }
+
+    public void init() {
         this.targetWord = setTargetWord();
         this.goodGuesses = new HashSet<>();
         this.badGuesses = new HashSet<>();
         this.remainingGuesses = TOTAL_NUMBER_OF_GUESSES_ALLOWED;
-    }
-
-    public GameData(@JsonProperty("targetWord")String t,
-                    @JsonProperty("goodGuesses") Set<Character> g,
-                    @JsonProperty("badGuesses") Set<Character> b,
-                    @JsonProperty("remainingGuesses") int r){
-        this.appTemplate = null;
-        this.targetWord = t;
-        this.goodGuesses = g;
-        this.badGuesses = b;
-        this.remainingGuesses = r;
     }
 
     @Override
@@ -63,11 +65,6 @@ public class GameData implements AppDataComponent {
     }
 
     private String setTargetWord() {
-        /* This function is called when GameData class is initialized.
-         * getClass(): Returns the runtime class of this Object.
-         * getClassLoader(): Returns the class loader for the class.
-         * getResource(): Finds the resource with the given name, returns a URL object for reading the resource
-         */
         URL wordsResource = getClass().getClassLoader().getResource("words/words.txt");
         assert wordsResource != null;
 
@@ -91,7 +88,6 @@ public class GameData implements AppDataComponent {
         return goodGuesses;
     }
 
-    @SuppressWarnings("unused")
     public GameData setGoodGuesses(Set<Character> goodGuesses) {
         this.goodGuesses = goodGuesses;
         return this;
@@ -101,7 +97,6 @@ public class GameData implements AppDataComponent {
         return badGuesses;
     }
 
-    @SuppressWarnings("unused")
     public GameData setBadGuesses(Set<Character> badGuesses) {
         this.badGuesses = badGuesses;
         return this;
@@ -111,11 +106,6 @@ public class GameData implements AppDataComponent {
         return remainingGuesses;
     }
 
-    public GameData setRemainingGuesses(int i){
-        this.remainingGuesses = i;
-        return this;
-    }
-
     public void addGoodGuess(char c) {
         goodGuesses.add(c);
     }
@@ -123,9 +113,7 @@ public class GameData implements AppDataComponent {
     public void addBadGuess(char c) {
         if (!badGuesses.contains(c)) {
             badGuesses.add(c);
-            if (remainingGuesses>0) {
-                remainingGuesses--;
-            }
+            remainingGuesses--;
         }
     }
 

@@ -4,11 +4,10 @@ package settings;
  * This enum provides properties that are to be loaded via
  * XML files to be used for setting up the application.
  *
- * @author Richard McKenna, Ritwik Banerjee
- * @author Eifu Tomita
+ * @author Richard McKenna
+ * @author ?
  * @version 1.0
  */
-@SuppressWarnings("unused")
 public enum AppPropertyType {
 
     // from app-properties.xml
@@ -34,32 +33,27 @@ public enum AppPropertyType {
     // ERROR MESSAGES
     NEW_ERROR_MESSAGE,
     SAVE_ERROR_MESSAGE,
-    LOAD_ERROR_MESSAGE,
     PROPERTIES_LOAD_ERROR_MESSAGE,
 
     // ERROR TITLES
     NEW_ERROR_TITLE,
     SAVE_ERROR_TITLE,
-    LOAD_ERROR_TITLE,
     PROPERTIES_LOAD_ERROR_TITLE,
 
     // AND VERIFICATION MESSAGES AND TITLES
-    NEW_COMPLETED_MESSAGE,
-    NEW_COMPLETED_TITLE,
     SAVE_COMPLETED_MESSAGE,
     SAVE_COMPLETED_TITLE,
     SAVE_UNSAVED_WORK_TITLE,
     SAVE_UNSAVED_WORK_MESSAGE,
-    LOAD_COMPLETED_MESSAGE,
-    LOAD_COMPLETED_TITLE,
-    EXIT_COMPLETED_MESSAGE,
-    EXIT_COMPLETED_TITLE,
-
-    SAVE_CANCEL_TITLE,
-    SAVE_CANCEL_MESSAGE,
 
     SAVE_WORK_TITLE,
+    LOAD_WORK_TITLE,
     WORK_FILE_EXT,
     WORK_FILE_EXT_DESC,
-    PROPERTIES_
+    LOAD_COMPLETED_MESSAGE,
+    LOAD_COMPLETED_TITLE,
+
+    GAME_WON_MESSAGE,
+    GAME_LOST_MESSAGE,
+    GAME_OVER_TITLE
 }

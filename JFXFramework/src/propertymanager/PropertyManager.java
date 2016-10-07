@@ -11,7 +11,7 @@ import java.net.URL;
 import java.util.*;
 
 /**
- * @author Richard McKenna, Ritwik Banerjee
+ * @author Ritwik Banerjee
  */
 public class PropertyManager {
 
@@ -45,7 +45,6 @@ public class PropertyManager {
         return singleton;
     }
 
-    @SuppressWarnings("unused")
     public void addProperty(String property, String value) {
         properties.put(property, value);
     }
@@ -58,7 +57,6 @@ public class PropertyManager {
         return properties.get(property.toString());
     }
 
-    @SuppressWarnings("unused")
     public void addPropertyOption(String property, String option) {
         if (properties.get(property) == null)
             throw new NoSuchElementException(String.format("Property \"%s\" does not exist.", property));
@@ -69,7 +67,6 @@ public class PropertyManager {
         propertyOptions.put(property, propertyoptionslist);
     }
     
-    @SuppressWarnings("unused")
     public List<String> getPropertyOptions(String property) {
         if (properties.get(property) == null)
             throw new NoSuchElementException(String.format("Property \"%s\" does not exist.", property));

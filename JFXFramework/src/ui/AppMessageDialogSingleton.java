@@ -18,17 +18,14 @@ import settings.InitializationParameters;
  * with a message, and a single ok button.
  *
  * @author Richard McKenna, Ritwik Banerjee
- * @author Eifu Tomita
+ * @author ?
  * @version 1.0
  */
 public class AppMessageDialogSingleton extends Stage {
 
-    static AppMessageDialogSingleton singleton = null;
+    private static AppMessageDialogSingleton singleton = null;
     
-    VBox   messagePane;
-    Scene  messageScene;
-    Label  messageLabel;
-    Button closeButton;
+    private Label messageLabel;
 
     private AppMessageDialogSingleton() { }
     
@@ -42,6 +39,10 @@ public class AppMessageDialogSingleton extends Stage {
             singleton = new AppMessageDialogSingleton();
         return singleton;
     }
+
+    public void setMessageLabel(String messageLabelText) {
+        messageLabel.setText(messageLabelText);
+    }
     
     /**
      * This function fully initializes the singleton dialog for use.
@@ -49,29 +50,24 @@ public class AppMessageDialogSingleton extends Stage {
      * @param owner The window above which this dialog will be centered.
      */
     public void init(Stage owner) {
-        // MAKE IT MODAL
-        initModality(Modality.WINDOW_MODAL);
+        initModality(Modality.WINDOW_MODAL); // modal => messages are blocked from reaching other windows
         initOwner(owner);
         
         // LABEL TO DISPLAY THE CUSTOM MESSAGE
         messageLabel = new Label();
 
-        // CLOSE BUTTON
-        closeButton = new Button(InitializationParameters.ERROR_DIALOG_BUTTON_LABEL.getParameter());
+        Button closeButton = new Button(InitializationParameters.CLOSE_LABEL.getParameter());
         closeButton.setOnAction(e -> this.close());
 
-        // WE'LL PUT EVERYTHING HERE
-        messagePane = new VBox();
+        VBox messagePane = new VBox();
         messagePane.setAlignment(Pos.CENTER);
         messagePane.getChildren().add(messageLabel);
         messagePane.getChildren().add(closeButton);
-        
-        // MAKE IT LOOK NICE
+
         messagePane.setPadding(new Insets(80, 60, 80, 60));
         messagePane.setSpacing(20);
 
-        // AND PUT IT IN THE WINDOW
-        messageScene = new Scene(messagePane);
+        Scene messageScene = new Scene(messagePane);
         this.setScene(messageScene);
     }
 
@@ -83,17 +79,8 @@ public class AppMessageDialogSingleton extends Stage {
      * @param message Message to appear inside the dialog.
      */
     public void show(String title, String message) {
-        // SET THE DIALOG TITLE BAR TITLE
-        setTitle(title);
-
-        // SET THE MESSAGE TO DISPLAY TO THE USER
-        messageLabel.setText(message);
-
-        // AND OPEN UP THIS DIALOG, MAKING SURE THE APPLICATION
-        // WAITS FOR IT TO BE RESOLVED BEFORE LETTING THE USER
-        // DO MORE WORK.
-        showAndWait();
+        setTitle(title); // set the dialog title
+        setMessageLabel(message); // message displayed to the user
+        showAndWait(); // opens the dialog, and waits for the user to resolve using one of the given choices
     }
-
-    public void setCloseButtonText(String s){closeButton.setText(s);}
 }

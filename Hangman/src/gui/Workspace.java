@@ -13,7 +13,6 @@ import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
-import javafx.scene.text.Text;
 import propertymanager.PropertyManager;
 import ui.AppGUI;
 
@@ -25,22 +24,22 @@ import static hangman.HangmanProperties.*;
  * This class serves as the GUI component for the Hangman game.
  *
  * @author Ritwik Banerjee
- * @author Eifu Tomita
  */
 public class Workspace extends AppWorkspaceComponent {
 
     AppTemplate app; // the actual application
     AppGUI      gui; // the GUI inside which the application sits
 
-    Label      guiHeadingLabel;   // workspace (GUI) heading label
-    HBox       headPane;          // conatainer to display the heading
-    HBox       bodyPane;          // container for the main game displays
-    ToolBar    footToolbar;       // toolbar for game buttons
-    BorderPane figurePane;        // container to display the namesake graphic of the (potentially) hanging person
-    VBox       gameTextsPane;     // container to display the text-related parts of the game
-    HBox       guessedLetters;    // text area displaying all the letters guessed so far
-    HBox       remainingGuessBox; // container to display the number of remaining guesses
-    Button     startGame;         // the button to start playing a game of Hangman
+    Label             guiHeadingLabel;   // workspace (GUI) heading label
+    HBox              headPane;          // conatainer to display the heading
+    HBox              bodyPane;          // container for the main game displays
+    ToolBar           footToolbar;       // toolbar for game buttons
+    BorderPane        figurePane;        // container to display the namesake graphic of the (potentially) hanging person
+    VBox              gameTextsPane;     // container to display the text-related parts of the game
+    HBox              guessedLetters;    // text area displaying all the letters guessed so far
+    HBox              remainingGuessBox; // container to display the number of remaining guesses
+    Button            startGame;         // the button to start playing a game of Hangman
+    HangmanController controller;
 
     /**
      * Constructor for initializing the workspace, note that this constructor
@@ -53,15 +52,11 @@ public class Workspace extends AppWorkspaceComponent {
     public Workspace(AppTemplate initApp) throws IOException {
         app = initApp;
         gui = app.getGUI();
+        controller = (HangmanController) gui.getFileController();    //new HangmanController(app, startGame); <-- THIS WAS A MAJOR BUG!??
         layoutGUI();     // initialize all the workspace (GUI) components including the containers and their layout
         setupHandlers(); // ... and set up event handling
     }
 
-
-
-    /**
-     * initialize all the workspace (GUI) components including the containers and their layout
-     */
     private void layoutGUI() {
         PropertyManager propertyManager = PropertyManager.getManager();
         guiHeadingLabel = new Label(propertyManager.getPropertyValue(WORKSPACE_HEADING_LABEL));
@@ -74,14 +69,12 @@ public class Workspace extends AppWorkspaceComponent {
         guessedLetters = new HBox();
         guessedLetters.setStyle("-fx-background-color: transparent;");
         remainingGuessBox = new HBox();
-
         gameTextsPane = new VBox();
+
         gameTextsPane.getChildren().setAll(remainingGuessBox, guessedLetters);
-        // Clears the ObservableList and add all the elements passed as var-args.
 
         bodyPane = new HBox();
         bodyPane.getChildren().addAll(figurePane, gameTextsPane);
-        // A convenient method for var-arg adding of elements.
 
         startGame = new Button("Start Playing");
         HBox blankBoxLeft  = new HBox();
@@ -95,7 +88,6 @@ public class Workspace extends AppWorkspaceComponent {
     }
 
     private void setupHandlers() {
-        HangmanController controller = new HangmanController(app, startGame);
         startGame.setOnMouseClicked(e -> controller.start());
     }
 
@@ -123,9 +115,7 @@ public class Workspace extends AppWorkspaceComponent {
     /** This function reloads the entire workspace */
     @Override
     public void reloadWorkspace() {
-
-            // todo after load a file
-
+        /* does nothing; use reinitialize() instead */
     }
 
     public VBox getGameTextsPane() {
@@ -147,9 +137,5 @@ public class Workspace extends AppWorkspaceComponent {
         gameTextsPane = new VBox();
         gameTextsPane.getChildren().setAll(remainingGuessBox, guessedLetters);
         bodyPane.getChildren().setAll(figurePane, gameTextsPane);
-    }
-
-    public void updateWorkspaceStartButton(boolean startable){
-        startGame.setDisable(!startable);
     }
 }

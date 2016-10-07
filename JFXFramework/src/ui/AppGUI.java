@@ -3,7 +3,6 @@ package ui;
 import apptemplate.AppTemplate;
 import components.AppStyleArbiter;
 import controller.FileController;
-import javafx.geometry.Rectangle2D;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Tooltip;
@@ -12,11 +11,9 @@ import javafx.scene.image.ImageView;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.Pane;
-import javafx.stage.Screen;
 import javafx.stage.Stage;
 import propertymanager.PropertyManager;
 
-import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
@@ -36,7 +33,6 @@ import static settings.InitializationParameters.APP_IMAGEDIR_PATH;
  * include the workspace, which should be customizable and application dependent.
  *
  * @author Richard McKenna, Ritwik Banerjee
- * @author Eifu Tomita
  */
 public class AppGUI implements AppStyleArbiter {
 
@@ -51,8 +47,8 @@ public class AppGUI implements AppStyleArbiter {
     protected Button         exitButton;       // button to exit application
     protected String         applicationTitle; // the application title
 
-    private int appSpecificWindowWidth;  // optional parameter for window width that can be set by the application
-    private int appSpecificWindowHeight; // optional parameter for window height that can be set by the application
+    private int appWindowWidth;  // optional parameter for window width that can be set by the application
+    private int appWindowHeight; // optional parameter for window height that can be set by the application
     
     /**
      * This constructor initializes the file toolbar for use.
@@ -66,17 +62,19 @@ public class AppGUI implements AppStyleArbiter {
         this(initPrimaryStage, initAppTitle, app, -1, -1);
     }
 
-    public AppGUI(Stage primaryStage, String applicationTitle, AppTemplate appTemplate, int appSpecificWindowWidth, int appSpecificWindowHeight) throws IOException, InstantiationException {
-        this.appSpecificWindowWidth = appSpecificWindowWidth;
-        this.appSpecificWindowHeight = appSpecificWindowHeight;
+    public AppGUI(Stage primaryStage, String applicationTitle, AppTemplate appTemplate, int appWindowWidth, int appWindowHeight) throws IOException, InstantiationException {
+        this.appWindowWidth = appWindowWidth;
+        this.appWindowHeight = appWindowHeight;
         this.primaryStage = primaryStage;
         this.applicationTitle = applicationTitle;
         initializeToolbar();                    // initialize the top toolbar
-
         initializeToolbarHandlers(appTemplate); // set the toolbar button handlers
-
         initializeWindow();                     // start the app window (without the application-specific workspace)
 
+    }
+
+    public FileController getFileController() {
+        return this.fileController;
     }
 
     public FlowPane getToolbarPane() { return toolbarPane; }
@@ -98,10 +96,6 @@ public class AppGUI implements AppStyleArbiter {
      * @return This application's primary stage (i.e. window).
      */
     public Stage getWindow() { return primaryStage; }
-
-    /****************************************************************************/
-    /* BELOW ARE ALL THE PRIVATE HELPER METHODS WE USE FOR INITIALIZING OUR AppGUI */
-    /****************************************************************************/
     
     /**
      * This function initializes all the buttons in the toolbar at the top of
@@ -122,9 +116,6 @@ public class AppGUI implements AppStyleArbiter {
             Class<?>       klass                        = Class.forName("controller." + fileControllerClassName);
             Constructor<?> constructor                  = klass.getConstructor(AppTemplate.class);
             fileController = (FileController) constructor.newInstance(app);
-
-
-
         } catch (NoSuchMethodException | InvocationTargetException | IllegalAccessException | ClassNotFoundException e) {
             e.printStackTrace();
             System.exit(1);
@@ -149,41 +140,25 @@ public class AppGUI implements AppStyleArbiter {
         exitButton.setOnAction(e -> fileController.handleExitRequest());
     }
 
-    public void updateWorkspaceToolbar(boolean startable, boolean loadable, boolean savable) {
-        newButton.setDisable(!startable);
-        loadButton.setDisable(!loadable);
+    public void updateWorkspaceToolbar(boolean savable) {
         saveButton.setDisable(!savable);
+        newButton.setDisable(false);
         exitButton.setDisable(false);
     }
 
-    // INITIALIZE THE WINDOW (i.e. STAGE) PUTTING ALL THE CONTROLS
-    // THERE EXCEPT THE WORKSPACE, WHICH WILL BE ADDED THE FIRST
-    // TIME A NEW Page IS CREATED OR LOADED
     private void initializeWindow() throws IOException {
         PropertyManager propertyManager = PropertyManager.getManager();
 
         // SET THE WINDOW TITLE
         primaryStage.setTitle(applicationTitle);
 
-        // GET THE SIZE OF THE SCREEN
-        Screen      screen = Screen.getPrimary();
-        Rectangle2D bounds = screen.getVisualBounds();
-
-        // AND USE IT TO SIZE THE WINDOW
-        primaryStage.setX(bounds.getMinX());
-        primaryStage.setY(bounds.getMinY());
-        primaryStage.setWidth(bounds.getWidth());
-        primaryStage.setHeight(bounds.getHeight());
-
-        // ADD THE TOOLBAR ONLY, NOTE THAT THE WORKSPACE
-        // HAS BEEN CONSTRUCTED, BUT WON'T BE ADDED UNTIL
-        // THE USER STARTS EDITING A COURSE
+        // add the toolbar to the constructed workspace
         appPane = new BorderPane();
         appPane.setTop(toolbarPane);
-        primaryScene = appSpecificWindowWidth < 1 || appSpecificWindowHeight < 1 ? new Scene(appPane)
-                                                                                 : new Scene(appPane,
-                                                                                             appSpecificWindowWidth,
-                                                                                             appSpecificWindowHeight);
+        primaryScene = appWindowWidth < 1 || appWindowHeight < 1 ? new Scene(appPane)
+                                                                 : new Scene(appPane,
+                                                                             appWindowWidth,
+                                                                             appWindowHeight);
 
         URL imgDirURL = AppTemplate.class.getClassLoader().getResource(APP_IMAGEDIR_PATH.getParameter());
         if (imgDirURL == null)
@@ -239,9 +214,5 @@ public class AppGUI implements AppStyleArbiter {
     @Override
     public void initStyle() {
         // currently, we do not provide any stylization at the framework-level
-    }
-
-    public void setFileController(FileController fc){
-        this.fileController = fc;
     }
 }

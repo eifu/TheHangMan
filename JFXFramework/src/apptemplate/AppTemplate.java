@@ -4,8 +4,6 @@ import components.AppComponentsBuilder;
 import components.AppDataComponent;
 import components.AppFileComponent;
 import components.AppWorkspaceComponent;
-import controller.AppFileController;
-import controller.FileController;
 import javafx.application.Application;
 import javafx.stage.Stage;
 import propertymanager.PropertyManager;
@@ -22,8 +20,7 @@ import static settings.AppPropertyType.*;
 import static settings.InitializationParameters.*;
 
 /**
- * @author Richard McKenna, Ritwik Banerjee
- * @author Eifu Tomita
+ * @author Ritwik Banerjee
  */
 public abstract class AppTemplate extends Application {
 
@@ -32,11 +29,10 @@ public abstract class AppTemplate extends Application {
     private AppFileComponent      fileComponent; // to manage the app's file I/O
     private AppWorkspaceComponent workspaceComponent; // to manage the app's GUI workspace
     private AppGUI                gui;
-    private AppFileController     fileController; // fileController
 
-    public AppFileController getFileController() {return fileController;}
-
-
+    public String getFileControllerClass() {
+        return "AppFileController";
+    }
 
     public abstract AppComponentsBuilder makeAppBuilderHook();
 
@@ -56,11 +52,6 @@ public abstract class AppTemplate extends Application {
         return gui;
     }
 
-    @SuppressWarnings("unused")
-    public String getFileControllerClass() {
-        return "AppFileController";
-    }
-
     @Override
     public void start(Stage primaryStage) {
         AppMessageDialogSingleton  messageDialog = AppMessageDialogSingleton.getSingleton();
@@ -75,14 +66,9 @@ public abstract class AppTemplate extends Application {
                 fileComponent = builder.buildFileComponent();
                 dataComponent = builder.buildDataComponent();
                 gui = (propertyManager.hasProperty(APP_WINDOW_WIDTH) && propertyManager.hasProperty(APP_WINDOW_HEIGHT))
-                      ? new AppGUI(primaryStage,
-                                   propertyManager.getPropertyValue(APP_TITLE.toString()),
-                                   this,
+                      ? new AppGUI(primaryStage, propertyManager.getPropertyValue(APP_TITLE.toString()), this,
                                    Integer.parseInt(propertyManager.getPropertyValue(APP_WINDOW_WIDTH)),
                                    Integer.parseInt(propertyManager.getPropertyValue(APP_WINDOW_HEIGHT)))
-
-
-
                       : new AppGUI(primaryStage, propertyManager.getPropertyValue(APP_TITLE.toString()), this);
                 workspaceComponent = builder.buildWorkspaceComponent();
                 initStylesheet();
@@ -116,11 +102,4 @@ public abstract class AppTemplate extends Application {
         assert cssResource != null;
         gui.getPrimaryScene().getStylesheets().add(cssResource.toExternalForm());
     }
-
-    public void setAppFileController(FileController fc){
-        gui.setFileController(fc);
-    }
-
-
-
 }
