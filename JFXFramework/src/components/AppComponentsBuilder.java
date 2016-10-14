@@ -10,7 +10,6 @@ package components;
  * @version 1.0
  */
 public interface AppComponentsBuilder {
-
     AppDataComponent buildDataComponent() throws Exception;
 
     AppFileComponent buildFileComponent() throws Exception;

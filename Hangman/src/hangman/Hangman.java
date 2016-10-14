@@ -29,12 +29,12 @@ public class Hangman extends AppTemplate {
             public AppDataComponent buildDataComponent() throws Exception {
                 return new GameData(Hangman.this);
             }
-    
+
             @Override
             public AppFileComponent buildFileComponent() throws Exception {
-                return new GameDataFile();  // GameDataFile is subclass of AppFileComponent
+                return new GameDataFile();
             }
-    
+
             @Override
             public AppWorkspaceComponent buildWorkspaceComponent() throws Exception {
                 return new Workspace(Hangman.this);

@@ -23,7 +23,6 @@ import static settings.InitializationParameters.APP_WORKDIR_PATH;
  *
  * @author Richard McKenna, Ritwik Banerjee
  */
-@SuppressWarnings("unused")
 public class AppFileController implements FileController {
 
     public AppTemplate           appTemplate;     // reference to the application
@@ -59,6 +58,8 @@ public class AppFileController implements FileController {
                 ensureActivatedWorkspace();                            // ensure workspace is activated
                 saved.set(false);                                      // new workspace is unsaved
                 currentWorkFile = null;                                // new workspace has never been saved to a file
+                //                messageDialog.show(propertyManager.getPropertyValue(NEW_COMPLETED_TITLE),
+                //                                   propertyManager.getPropertyValue(NEW_COMPLETED_MESSAGE));
             }
         } catch (IOException ioe) {
             // SOMETHING WENT WRONG, PROVIDE FEEDBACK

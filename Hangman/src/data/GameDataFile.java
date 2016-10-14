@@ -1,24 +1,17 @@
 package data;
 
-import com.fasterxml.jackson.core.JsonGenerationException;
-import com.fasterxml.jackson.databind.JsonMappingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.exc.UnrecognizedPropertyException;
+import com.fasterxml.jackson.core.*;
 import components.AppDataComponent;
 import components.AppFileComponent;
-import propertymanager.PropertyManager;
-import settings.InitializationParameters;
-import ui.AppMessageDialogSingleton;
 
-import java.io.File;
 import java.io.IOException;
+import java.io.OutputStream;
+import java.nio.file.Files;
 import java.nio.file.Path;
-
-import static settings.AppPropertyType.*;
+import java.util.Set;
 
 /**
  * @author Ritwik Banerjee
- * @author Eifu Tomita
  */
 public class GameDataFile implements AppFileComponent {
 
@@ -27,61 +20,74 @@ public class GameDataFile implements AppFileComponent {
     public static final String BAD_GUESSES  = "BAD_GUESSES";
 
     @Override
-    public void saveData(AppDataComponent data, Path to) throws IOException{
-        // save data to the path. called from HangmanController.
-        ObjectMapper om = new ObjectMapper();
+    public void saveData(AppDataComponent data, Path to) {
+        GameData       gamedata    = (GameData) data;
+        Set<Character> goodguesses = gamedata.getGoodGuesses();
+        Set<Character> badguesses  = gamedata.getBadGuesses();
 
-        GameData data_holder = new GameData(((GameData) data).getTargetWord(),
-                                            ((GameData) data).getGoodGuesses(),
-                                            ((GameData) data).getBadGuesses(),
-                                            ((GameData) data).getRemainingGuesses());
+        JsonFactory jsonFactory = new JsonFactory();
 
-        try {
-            //Convert object to JSON string and save into file directly
-            om.writeValue(new File(to.toString()), data_holder);
+        try (OutputStream out = Files.newOutputStream(to)) {
+
+            JsonGenerator generator = jsonFactory.createGenerator(out, JsonEncoding.UTF8);
+
+            generator.writeStartObject();
+
+            generator.writeStringField(TARGET_WORD, gamedata.getTargetWord());
+
+            generator.writeFieldName(GOOD_GUESSES);
+            generator.writeStartArray(goodguesses.size());
+            for (Character c : goodguesses)
+                generator.writeString(c.toString());
+            generator.writeEndArray();
+
+            generator.writeFieldName(BAD_GUESSES);
+            generator.writeStartArray(badguesses.size());
+            for (Character c : badguesses)
+                generator.writeString(c.toString());
+            generator.writeEndArray();
+
+            generator.writeEndObject();
+
+            generator.close();
+
         } catch (IOException e) {
             e.printStackTrace();
-            throw new IOException();
+            System.exit(1);
         }
     }
 
     @Override
     public void loadData(AppDataComponent data, Path from) throws IOException {
-        ObjectMapper om = new ObjectMapper();
-        try {
-            GameData data_loaded = om.readValue(new File(from.toString()), GameData.class);
-            ((GameData) data).setTargetWord(data_loaded.getTargetWord())
-                    .setGoodGuesses(data_loaded.getGoodGuesses())
-                    .setBadGuesses(data_loaded.getBadGuesses())
-                    .setRemainingGuesses(data_loaded.getRemainingGuesses());
-        } catch(IOException e){
-            AppMessageDialogSingleton dialog = AppMessageDialogSingleton.getSingleton();
-            PropertyManager           props  = PropertyManager.getManager();
-            dialog.setCloseButtonText(InitializationParameters.CLOSE_DIALOG_BUTTON_LABEL.getParameter());
-            dialog.show(props.getPropertyValue(LOAD_ERROR_TITLE), props.getPropertyValue(LOAD_ERROR_MESSAGE));
-            throw new IOException();
-        }
-        validateData(data);
-    }
+        GameData gamedata = (GameData) data;
+        gamedata.reset();
 
-    private void validateData(AppDataComponent data) throws IOException{
-        GameData gameData = (GameData) data;
-        try{
-            if (gameData.getGoodGuesses().size() >= 10){
-                throw new IOException();
-            }else if (gameData.getBadGuesses().size() >= 10){
-                throw new IOException();
-            }else if (gameData.getRemainingGuesses() >=10){
-                throw new IOException();
-            }else if (gameData.getTargetWord().length() == 0){
-                throw new IOException();
+        JsonFactory jsonFactory = new JsonFactory();
+        JsonParser  jsonParser  = jsonFactory.createParser(Files.newInputStream(from));
+
+        while (!jsonParser.isClosed()) {
+            JsonToken token = jsonParser.nextToken();
+            if (JsonToken.FIELD_NAME.equals(token)) {
+                String fieldname = jsonParser.getCurrentName();
+                switch (fieldname) {
+                    case TARGET_WORD:
+                        jsonParser.nextToken();
+                        gamedata.setTargetWord(jsonParser.getValueAsString());
+                        break;
+                    case GOOD_GUESSES:
+                        jsonParser.nextToken();
+                        while (jsonParser.nextToken() != JsonToken.END_ARRAY)
+                            gamedata.addGoodGuess(jsonParser.getText().charAt(0));
+                        break;
+                    case BAD_GUESSES:
+                        jsonParser.nextToken();
+                        while (jsonParser.nextToken() != JsonToken.END_ARRAY)
+                            gamedata.addBadGuess(jsonParser.getText().charAt(0));
+                        break;
+                    default:
+                        throw new JsonParseException(jsonParser, "Unable to load JSON data");
+                }
             }
-        }catch(IOException e){
-            AppMessageDialogSingleton dialog = AppMessageDialogSingleton.getSingleton();
-            PropertyManager           props  = PropertyManager.getManager();
-            dialog.setCloseButtonText(InitializationParameters.WRONG_JSON_DIALOG_BUTTON_LABEL.getParameter());
-            dialog.show(props.getPropertyValue(PROPERTIES_LOAD_ERROR_TITLE), props.getPropertyValue(PROPERTIES_LOAD_ERROR_MESSAGE));
-            throw new IOException();
         }
     }
 
