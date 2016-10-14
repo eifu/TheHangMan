@@ -141,7 +141,7 @@ public class HangmanController implements FileController {
                 appTemplate.getGUI().updateWorkspaceToolbar(gamestate.equals(GameState.INITIALIZED_MODIFIED));
                 appTemplate.getGUI().getPrimaryScene().setOnKeyTyped((KeyEvent event) -> {
                     char guess = event.getCharacter().charAt(0);
-                    if (!alreadyGuessed(guess)) {
+                    if (Character.isLetter(guess) && !alreadyGuessed(guess)) {
                         boolean goodguess = false;
                         for (int i = 0; i < progress.length; i++) {
                             if (gamedata.getTargetWord().charAt(i) == guess) {
