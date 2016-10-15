@@ -9,6 +9,9 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.StackPane;
+import javafx.scene.paint.Color;
+import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Text;
 import javafx.stage.FileChooser;
 import javafx.stage.FileChooser.ExtensionFilter;
@@ -39,7 +42,7 @@ public class HangmanController implements FileController {
     private AppTemplate appTemplate; // shared reference to the application
     private GameData    gamedata;    // shared reference to the game being played, loaded or saved
     private GameState   gamestate;   // the state of the game being shown in the workspace
-    private Text[]      progress;    // reference to the text area for the word
+    private StackPane[]      progress;    // reference to the text area for the word
     private boolean     success;     // whether or not player was successful
     private int         discovered;  // the number of letters already discovered
     private Button      gameButton;  // shared reference to the "start game" button
@@ -125,10 +128,16 @@ public class HangmanController implements FileController {
 
     private void initWordGraphics(HBox guessedLetters) {
         char[] targetword = gamedata.getTargetWord().toCharArray();
-        progress = new Text[targetword.length];
+        progress = new StackPane[targetword.length];
         for (int i = 0; i < progress.length; i++) {
-            progress[i] = new Text(Character.toString(targetword[i]));
-            progress[i].setVisible(false);
+            Text t = new Text(Character.toString(targetword[i]));
+            t.setVisible(false);
+            Rectangle rect_out = new Rectangle(30, 30);
+            rect_out.setFill(Color.TRANSPARENT);
+            Rectangle rect_in = new Rectangle(20, 20);
+            rect_in.setFill(Color.WHITE);
+            progress[i] = new StackPane(rect_out,rect_in,t);
+
         }
         guessedLetters.getChildren().addAll(progress);
     }
@@ -145,7 +154,7 @@ public class HangmanController implements FileController {
                         boolean goodguess = false;
                         for (int i = 0; i < progress.length; i++) {
                             if (gamedata.getTargetWord().charAt(i) == guess) {
-                                progress[i].setVisible(true);
+                                progress[i].getChildren().get(2).setVisible(true);
                                 gamedata.addGoodGuess(guess);
                                 goodguess = true;
                                 discovered++;
@@ -191,12 +200,18 @@ public class HangmanController implements FileController {
     private void restoreWordGraphics(HBox guessedLetters) {
         discovered = 0;
         char[] targetword = gamedata.getTargetWord().toCharArray();
-        progress = new Text[targetword.length];
+        progress = new StackPane[targetword.length];
         for (int i = 0; i < progress.length; i++) {
-            progress[i] = new Text(Character.toString(targetword[i]));
-            progress[i].setVisible(gamedata.getGoodGuesses().contains(progress[i].getText().charAt(0)));
-            if (progress[i].isVisible())
+            Text t = new Text(Character.toString(targetword[i]));
+            t.setVisible(gamedata.getGoodGuesses().contains(t.getText().charAt(0)));
+            if (t.isVisible())
                 discovered++;
+            Rectangle rect_out = new Rectangle(30, 30);
+            rect_out.setFill(Color.TRANSPARENT);
+
+            Rectangle rect_in = new Rectangle(20, 20);
+            rect_in.setFill(Color.WHITE);
+            progress[i] = new StackPane(rect_out, rect_in, t);
         }
         guessedLetters.getChildren().addAll(progress);
     }
