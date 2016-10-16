@@ -7,12 +7,16 @@ import data.GameData;
 import gui.Workspace;
 import javafx.animation.AnimationTimer;
 import javafx.application.Platform;
+import javafx.geometry.Bounds;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
+import javafx.scene.shape.Circle;
+import javafx.scene.shape.Line;
 import javafx.scene.shape.Rectangle;
+import javafx.scene.shape.Shape;
 import javafx.scene.text.Text;
 import javafx.stage.FileChooser;
 import javafx.stage.FileChooser.ExtensionFilter;
@@ -49,6 +53,7 @@ public class HangmanController implements FileController {
     private Button      gameButton;  // shared reference to the "start game" button
     private Button      hintButton;  //
     private FlowPane    guessedKeys; //
+    private Pane  figurePane;
     private Label       remains;     // dynamically updated label that indicates the number of remaining guesses
     private Path        workFile;
 
@@ -135,6 +140,41 @@ public class HangmanController implements FileController {
         setGameState(GameState.ENDED);
         appTemplate.getGUI().updateWorkspaceToolbar(gamestate.equals(GameState.INITIALIZED_MODIFIED));
         Platform.runLater(() -> {
+            for (int i = 0; i < progress.length; i++) {
+                progress[i].getChildren().get(2).setVisible(true);
+                if (!gamedata.getGoodGuesses().contains(((Text)progress[i].getChildren().get(2)).getText().charAt(0))) {
+                    ((Rectangle)progress[i].getChildren().get(1)).setFill(Color.LIGHTBLUE);
+
+                }
+            }
+            Bounds bounds = figurePane.getBoundsInLocal();
+            Bounds screenBounds = figurePane.localToScreen(bounds);
+            int x = (int) screenBounds.getMinX();
+            int y = (int) screenBounds.getMinY();
+            int width = (int) screenBounds.getWidth();
+            int height = (int) screenBounds.getHeight();
+
+            Shape body = new Line(width*0.4,height*0.3, width*0.4, height*0.55);
+            body.setStrokeWidth(5);
+            figurePane.getChildren().add(body);
+
+
+            Shape leftarm = new Line(width*0.4,height*0.35, width*0.3, height*0.4);
+            body.setStrokeWidth(5);
+            figurePane.getChildren().add(leftarm);
+
+            Shape rightarm = new Line(width*0.4,height*0.35, width*0.5, height*0.4);
+            body.setStrokeWidth(5);
+            figurePane.getChildren().add(rightarm);
+
+            Shape leftfoot = new Line(width*0.4,height*0.55, width*0.3, height*0.65);
+            body.setStrokeWidth(5);
+            figurePane.getChildren().add(leftfoot);
+
+            Shape rightfoot = new Line(width*0.4,height*0.55, width*0.5, height*0.65);
+            body.setStrokeWidth(5);
+            figurePane.getChildren().add(rightfoot);
+
             PropertyManager           manager    = PropertyManager.getManager();
             AppMessageDialogSingleton dialog     = AppMessageDialogSingleton.getSingleton();
             String                    endMessage = manager.getPropertyValue(success ? GAME_WON_MESSAGE : GAME_LOST_MESSAGE);
@@ -143,13 +183,9 @@ public class HangmanController implements FileController {
                 dialog.toFront();
             else
                 dialog.show(manager.getPropertyValue(GAME_OVER_TITLE), endMessage);
-            for (int i = 0; i < progress.length; i++) {
-                progress[i].getChildren().get(2).setVisible(true);
-                if (!gamedata.getGoodGuesses().contains(((Text)progress[i].getChildren().get(2)).getText().charAt(0))) {
-                    ((Rectangle)progress[i].getChildren().get(1)).setFill(Color.LIGHTBLUE);
 
-                }
-            }
+
+
 
         });
     }
@@ -174,8 +210,8 @@ public class HangmanController implements FileController {
         disableGameButton();
 
         Workspace gameWorkspace = (Workspace) appTemplate.getWorkspaceComponent();
-        BorderPane figurePane = gameWorkspace.getFigurePane();
-        figurePane.setPrefSize(500,300);
+        figurePane = gameWorkspace.getFigurePane();
+        figurePane.setPrefSize(500,500);
 
         guessedKeys = gameWorkspace.getGuessedKeys();
 
@@ -199,9 +235,11 @@ public class HangmanController implements FileController {
                                 discovered++;
                             }
                         }
-                        if (!goodguess)
+                        if (!goodguess) {
                             gamedata.addBadGuess(guess);
 
+                            figurePane.getChildren().add(drawGraphic(gamedata.getRemainingGuesses()));
+                        }
                         success = (discovered == progress.length);
                         remains.setText(Integer.toString(gamedata.getRemainingGuesses()));
                     }
@@ -216,6 +254,7 @@ public class HangmanController implements FileController {
 
                 if (gamedata.getHintReserved()){
                     hintButton.setOnMouseClicked(e -> {
+                        // TODO hint letter returns somewrong thing. hint letter was in good guess.
 
                         // find letter in target, AND not in goodGuess
                         char letter_for_hint = hint_letter_finder();
@@ -255,6 +294,50 @@ public class HangmanController implements FileController {
             }
         }
         throw new PropertyNotFoundException();
+    }
+
+    private Shape drawGraphic(int remainingGuess){
+        Bounds bounds = figurePane.getBoundsInLocal();
+        Bounds screenBounds = figurePane.localToScreen(bounds);
+        int x = (int) screenBounds.getMinX();
+        int y = (int) screenBounds.getMinY();
+        Shape line;
+        int width = (int) screenBounds.getWidth();
+        int height = (int) screenBounds.getHeight();
+        switch (remainingGuess){
+            case 9:
+                line = new Line(0, height*0.8, width, height*0.8);
+                break;
+            case 8:
+                line = new Line(width*0.2,  height*0.8, width*0.2, height*0.6);
+                break;
+            case 7:
+                line = new Line(width*0.2,   height*0.6, width*0.2, height*0.4);
+                break;
+            case 6:
+                line = new Line(width*0.2, height*0.4, width*0.2, height*0.2);
+                break;
+            case 5:
+                line = new Line(width*0.2, height*0.2,  width*0.2, 0);
+                break;
+            case 4:
+                line = new Line(width*0.2, 0, width*0.4, 0);
+                break;
+            case 3:
+                line = new Line(width*0.4, 0, width*0.4, height*0.1);
+                break;
+            case 2:
+                line = new Line(width*0.4, height*0.1, width*0.4, height*0.2);
+                break;
+            case 1:
+                line = new Circle(width*0.4,height*0.2+width*0.05,width*0.05);
+                break;
+            default:
+                line = new Line();
+        }
+        line.setStrokeWidth(3);
+        line.setFill(Color.BLACK);
+        return line;
     }
 
     private void restoreGUI() {

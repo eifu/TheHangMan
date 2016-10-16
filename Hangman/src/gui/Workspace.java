@@ -37,7 +37,7 @@ public class Workspace extends AppWorkspaceComponent {
     HBox              headPane;          // conatainer to display the heading
     HBox              bodyPane;          // container for the main game displays
     ToolBar           footToolbar;       // toolbar for game buttons
-    BorderPane        figurePane;        // container to display the namesake graphic of the (potentially) hanging person
+    Pane        figurePane;        // container to display the namesake graphic of the (potentially) hanging person
     VBox              gameTextsPane;     // container to display the text-related parts of the game
     HBox              guessedLetters;    // text area displaying all the letters guessed so far
     HBox              remainingGuessBox; // container to display the number of remaining guesses
@@ -70,7 +70,7 @@ public class Workspace extends AppWorkspaceComponent {
         headPane.getChildren().add(guiHeadingLabel);
         headPane.setAlignment(Pos.CENTER);
 
-        figurePane = new BorderPane();
+        figurePane = new Pane();
 
         gameTextsPane = new VBox();
         remainingGuessBox = new HBox();
@@ -144,7 +144,7 @@ public class Workspace extends AppWorkspaceComponent {
 
     public Button getHintGame(){ return hintGame;}
 
-    public BorderPane getFigurePane(){return figurePane;}
+    public Pane getFigurePane(){return figurePane;}
 
     public FlowPane getGuessedKeys(){return guessedKeys;}
 
@@ -161,7 +161,7 @@ public class Workspace extends AppWorkspaceComponent {
         hintGame.setVisible(((GameData)app.getDataComponent()).getDifficulty());
         gameTextsPane.getChildren().setAll(remainingGuessBox, guessedLetters, guessedKeys, hintGame);
 
-        figurePane = new BorderPane();
+        figurePane = new Pane();
 
         bodyPane.getChildren().setAll(figurePane, gameTextsPane);
     }
