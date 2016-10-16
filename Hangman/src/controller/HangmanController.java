@@ -117,12 +117,19 @@ public class HangmanController implements FileController {
             PropertyManager           manager    = PropertyManager.getManager();
             AppMessageDialogSingleton dialog     = AppMessageDialogSingleton.getSingleton();
             String                    endMessage = manager.getPropertyValue(success ? GAME_WON_MESSAGE : GAME_LOST_MESSAGE);
-            if (!success)
-                endMessage += String.format(" (the word was \"%s\")", gamedata.getTargetWord());
+
             if (dialog.isShowing())
                 dialog.toFront();
             else
                 dialog.show(manager.getPropertyValue(GAME_OVER_TITLE), endMessage);
+            for (int i = 0; i < progress.length; i++) {
+                progress[i].getChildren().get(2).setVisible(true);
+                if (!gamedata.getGoodGuesses().contains(((Text)progress[i].getChildren().get(2)).getText().charAt(0))) {
+                    ((Rectangle)progress[i].getChildren().get(1)).setFill(Color.LIGHTBLUE);
+
+                }
+            }
+
         });
     }
 
