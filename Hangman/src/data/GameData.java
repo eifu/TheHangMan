@@ -69,8 +69,31 @@ public class GameData implements AppDataComponent {
         assert wordsResource != null;
 
         int toSkip = new Random().nextInt(TOTAL_NUMBER_OF_STORED_WORDS);
-        try (Stream<String> lines = Files.lines(Paths.get(wordsResource.toURI()))) {
-            return lines.skip(toSkip).findFirst().get();
+
+        String s ="";
+        char[] c_array;
+        boolean still_not_find = true;
+        try {
+            Stream<String> lines = Files.lines(Paths.get(wordsResource.toURI()));
+
+            s = lines.skip(toSkip).findFirst().get();
+
+            while (still_not_find){
+                c_array = s.toCharArray();
+                still_not_find = false;
+                for (int i = 0; i < c_array.length;i++){
+                    if (!Character.isLetter(c_array[i])) {
+                        still_not_find = true;
+                        lines.close();
+                        lines = Files.lines(Paths.get(wordsResource.toURI()));
+                        s = lines.skip((toSkip+1)/TOTAL_NUMBER_OF_STORED_WORDS).findFirst().get();
+                        break;
+                    }
+                }
+            }
+
+            return s;
+
         } catch (IOException | URISyntaxException e) {
             e.printStackTrace();
             System.exit(1);
