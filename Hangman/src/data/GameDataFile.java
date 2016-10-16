@@ -18,6 +18,7 @@ public class GameDataFile implements AppFileComponent {
     public static final String TARGET_WORD  = "TARGET_WORD";
     public static final String GOOD_GUESSES = "GOOD_GUESSES";
     public static final String BAD_GUESSES  = "BAD_GUESSES";
+    public static final String HINT_RESERVED = "HINT_RESERVED";
 
     @Override
     public void saveData(AppDataComponent data, Path to) {
@@ -34,6 +35,8 @@ public class GameDataFile implements AppFileComponent {
             generator.writeStartObject();
 
             generator.writeStringField(TARGET_WORD, gamedata.getTargetWord());
+
+            generator.writeBooleanField(HINT_RESERVED, gamedata.getHintReserved());
 
             generator.writeFieldName(GOOD_GUESSES);
             generator.writeStartArray(goodguesses.size());
@@ -74,6 +77,9 @@ public class GameDataFile implements AppFileComponent {
                         jsonParser.nextToken();
                         gamedata.setTargetWord(jsonParser.getValueAsString());
                         break;
+                    case HINT_RESERVED:
+                        jsonParser.nextToken();
+                        gamedata.setHintReserved(jsonParser.getValueAsBoolean());
                     case GOOD_GUESSES:
                         jsonParser.nextToken();
                         while (jsonParser.nextToken() != JsonToken.END_ARRAY)

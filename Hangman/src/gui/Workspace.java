@@ -3,20 +3,23 @@ package gui;
 import apptemplate.AppTemplate;
 import components.AppWorkspaceComponent;
 import controller.HangmanController;
+import data.GameData;
 import javafx.collections.ObservableList;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.ToolBar;
-import javafx.scene.layout.BorderPane;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.Priority;
-import javafx.scene.layout.VBox;
+import javafx.scene.layout.*;
+import javafx.scene.paint.Color;
+import javafx.scene.shape.Rectangle;
+import javafx.scene.text.Text;
 import propertymanager.PropertyManager;
 import ui.AppGUI;
 
 import java.io.IOException;
+import java.util.HashSet;
+import java.util.Set;
 
 import static hangman.HangmanProperties.*;
 
@@ -39,6 +42,8 @@ public class Workspace extends AppWorkspaceComponent {
     HBox              guessedLetters;    // text area displaying all the letters guessed so far
     HBox              remainingGuessBox; // container to display the number of remaining guesses
     Button            startGame;         // the button to start playing a game of Hangman
+    Button            hintGame;
+    FlowPane          guessedKeys;
     HangmanController controller;
 
     /**
@@ -66,12 +71,19 @@ public class Workspace extends AppWorkspaceComponent {
         headPane.setAlignment(Pos.CENTER);
 
         figurePane = new BorderPane();
+
+        gameTextsPane = new VBox();
+        remainingGuessBox = new HBox();
         guessedLetters = new HBox();
         guessedLetters.setStyle("-fx-background-color: transparent;");
-        remainingGuessBox = new HBox();
-        gameTextsPane = new VBox();
 
-        gameTextsPane.getChildren().setAll(remainingGuessBox, guessedLetters);
+        guessedKeys = new FlowPane();
+
+
+        hintGame = new Button("Hint");
+        hintGame.setVisible(false);
+
+        gameTextsPane.getChildren().setAll(remainingGuessBox, guessedLetters,guessedKeys, hintGame);
 
         bodyPane = new HBox();
         bodyPane.getChildren().addAll(figurePane, gameTextsPane);
@@ -130,12 +142,27 @@ public class Workspace extends AppWorkspaceComponent {
         return startGame;
     }
 
+    public Button getHintGame(){ return hintGame;}
+
+    public BorderPane getFigurePane(){return figurePane;}
+
+    public FlowPane getGuessedKeys(){return guessedKeys;}
+
     public void reinitialize() {
+
+        remainingGuessBox = new HBox();
         guessedLetters = new HBox();
         guessedLetters.setStyle("-fx-background-color: transparent;");
-        remainingGuessBox = new HBox();
         gameTextsPane = new VBox();
-        gameTextsPane.getChildren().setAll(remainingGuessBox, guessedLetters);
+
+        guessedKeys = new FlowPane();
+
+        hintGame = new Button("Hint");
+        hintGame.setVisible(((GameData)app.getDataComponent()).getDifficulty());
+        gameTextsPane.getChildren().setAll(remainingGuessBox, guessedLetters, guessedKeys, hintGame);
+
+        figurePane = new BorderPane();
+
         bodyPane.getChildren().setAll(figurePane, gameTextsPane);
     }
 }

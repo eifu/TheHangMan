@@ -23,6 +23,7 @@ public class GameData implements AppDataComponent {
     private static final int TOTAL_NUMBER_OF_STORED_WORDS    = 330622;
 
     private String         targetWord;
+    private boolean         hint_reserved;
     private Set<Character> goodGuesses;
     private Set<Character> badGuesses;
     private int            remainingGuesses;
@@ -36,6 +37,7 @@ public class GameData implements AppDataComponent {
         if (initiateGame) {
             this.appTemplate = appTemplate;
             this.targetWord = setTargetWord();
+            this.hint_reserved = true;
             this.goodGuesses = new HashSet<>();
             this.badGuesses = new HashSet<>();
             this.remainingGuesses = TOTAL_NUMBER_OF_GUESSES_ALLOWED;
@@ -46,6 +48,7 @@ public class GameData implements AppDataComponent {
 
     public void init() {
         this.targetWord = setTargetWord();
+        this.hint_reserved = true;
         this.goodGuesses = new HashSet<>();
         this.badGuesses = new HashSet<>();
         this.remainingGuesses = TOTAL_NUMBER_OF_GUESSES_ALLOWED;
@@ -58,6 +61,18 @@ public class GameData implements AppDataComponent {
         this.badGuesses = new HashSet<>();
         this.remainingGuesses = TOTAL_NUMBER_OF_GUESSES_ALLOWED;
         appTemplate.getWorkspaceComponent().reloadWorkspace();
+    }
+
+    public boolean getDifficulty(){
+        Set<Character> diff = new HashSet<>();
+        if (targetWord == null){
+            return false;
+        }
+        char[] c_array = targetWord.toCharArray();
+        for (int i = 0; i < c_array.length;i++){
+            diff.add(c_array[i]);
+        }
+        return diff.size() > 7;
     }
 
     public String getTargetWord() {
@@ -104,6 +119,13 @@ public class GameData implements AppDataComponent {
 
     public GameData setTargetWord(String targetWord) {
         this.targetWord = targetWord;
+        return this;
+    }
+
+    public boolean getHintReserved(){return hint_reserved;}
+
+    public GameData setHintReserved(boolean hint_reserved){
+        this.hint_reserved = hint_reserved;
         return this;
     }
 
