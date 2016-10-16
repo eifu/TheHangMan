@@ -151,6 +151,11 @@ public class GameData implements AppDataComponent {
         return remainingGuesses;
     }
 
+    public GameData setRemainingGuesses(int remainingGuesses){
+        this.remainingGuesses = remainingGuesses;
+        return this;
+    }
+
     public void addGoodGuess(char c) {
         goodGuesses.add(c);
     }

@@ -1,6 +1,7 @@
 package controller;
 
 import apptemplate.AppTemplate;
+import com.sun.javafx.fxml.PropertyNotFoundException;
 import com.sun.xml.internal.ws.api.pipe.FiberContextSwitchInterceptor;
 import data.GameData;
 import gui.Workspace;
@@ -46,8 +47,8 @@ public class HangmanController implements FileController {
     private boolean     success;     // whether or not player was successful
     private int         discovered;  // the number of letters already discovered
     private Button      gameButton;  // shared reference to the "start game" button
-    private Button      hintButton;
-    private FlowPane    guessedKeys;
+    private Button      hintButton;  //
+    private FlowPane    guessedKeys; //
     private Label       remains;     // dynamically updated label that indicates the number of remaining guesses
     private Path        workFile;
 
@@ -117,6 +118,14 @@ public class HangmanController implements FileController {
         initWordGraphics(guessedLetters);
         hintButton = gameWorkspace.getHintGame();
         hintButton.setVisible(gamedata.getDifficulty());
+
+        guessedKeys = gameWorkspace.getGuessedKeys();
+        for (int i = 'a'; i <= 'z'; i++){
+            StackPane s = new StackPane(new Rectangle(45,45),new Rectangle(40,40), new Text(Character.toString((char)i)));
+            ((Rectangle)s.getChildren().get(0)).setFill(Color.TRANSPARENT);
+            ((Rectangle)s.getChildren().get(1)).setFill(Color.LIGHTCYAN);
+            guessedKeys.getChildren().add(s);
+        }
         play();
     }
 
@@ -163,20 +172,13 @@ public class HangmanController implements FileController {
 
     public void play() {
         disableGameButton();
-        setVisbleHintButton(gamedata.getDifficulty());
 
         Workspace gameWorkspace = (Workspace) appTemplate.getWorkspaceComponent();
         BorderPane figurePane = gameWorkspace.getFigurePane();
-        figurePane.setPrefSize(400,200);
+        figurePane.setPrefSize(500,300);
 
         guessedKeys = gameWorkspace.getGuessedKeys();
-        for (int i = 'a'; i <= 'z'; i++){
-            StackPane s = new StackPane(new Rectangle(45,45),new Rectangle(40,40), new Text(Character.toString((char)i)));
-            ((Rectangle)s.getChildren().get(0)).setFill(Color.TRANSPARENT);
-            ((Rectangle)s.getChildren().get(1)).setFill(Color.LIGHTCYAN);
-            guessedKeys.getChildren().add(s);
-        }
-        guessedKeys.setBackground(Background.EMPTY);
+
 
         AnimationTimer timer = new AnimationTimer() {
             @Override
@@ -207,6 +209,30 @@ public class HangmanController implements FileController {
                 });
                 if (gamedata.getRemainingGuesses() <= 0 || success)
                     stop();
+
+                if (gamedata.getRemainingGuesses() == 1){
+                    hintButton.setDisable(true);
+                }
+
+                if (gamedata.getHintReserved()){
+                    hintButton.setOnMouseClicked(e -> {
+
+                        // find letter in target, AND not in goodGuess
+                        char letter_for_hint = hint_letter_finder();
+                        for (int i = 0; i < progress.length; i++) {
+                            if (gamedata.getTargetWord().charAt(i) == letter_for_hint) {
+                                progress[i].getChildren().get(2).setVisible(true);
+                                gamedata.addGoodGuess(letter_for_hint);
+                                discovered++;
+                            }
+                        }
+                        ((Rectangle)((StackPane)guessedKeys.getChildren().get(letter_for_hint-'a')).getChildren().get(1)).setFill(Color.AQUA);
+                        gamedata.setHintReserved(false);
+                        gamedata.setRemainingGuesses(gamedata.getRemainingGuesses()-1);
+
+                        hintButton.setDisable(true);
+                    });
+                }
             }
 
             @Override
@@ -216,6 +242,19 @@ public class HangmanController implements FileController {
             }
         };
         timer.start();
+    }
+
+    private char hint_letter_finder(){
+        for (int letter = 'a'; letter <= 'z'; letter ++){
+            if (!gamedata.getGoodGuesses().contains(letter)){
+                for (int i = 0; i < gamedata.getTargetWord().length(); i ++) {
+                    if (gamedata.getTargetWord().charAt(i) == letter) {
+                        return (char)letter;
+                    }
+                }
+            }
+        }
+        throw new PropertyNotFoundException();
     }
 
     private void restoreGUI() {
@@ -231,9 +270,19 @@ public class HangmanController implements FileController {
         remainingGuessBox.getChildren().addAll(new Label("Remaining Guesses: "), remains);
 
         guessedKeys = gameWorkspace.getGuessedKeys();
-
+        for (int i = 'a'; i <= 'z'; i++){
+            StackPane s = new StackPane(new Rectangle(45,45),new Rectangle(40,40), new Text(Character.toString((char)i)));
+            ((Rectangle)s.getChildren().get(0)).setFill(Color.TRANSPARENT);
+            if (alreadyGuessed((char)i)){
+                ((Rectangle) s.getChildren().get(1)).setFill(Color.AQUA);
+            }else {
+                ((Rectangle) s.getChildren().get(1)).setFill(Color.LIGHTCYAN);
+            }
+            guessedKeys.getChildren().add(s);
+        }
         hintButton = (Button)gameWorkspace.getGameTextsPane().getChildren().get(3);
         hintButton.setVisible(gamedata.getDifficulty());
+        hintButton.setDisable(!gamedata.getHintReserved());
         success = false;
         play();
     }
