@@ -148,6 +148,8 @@ public class Workspace extends AppWorkspaceComponent {
 
     public FlowPane getGuessedKeys(){return guessedKeys;}
 
+    public HBox getBodyPane(){return bodyPane;}
+
     public void reinitialize() {
 
         remainingGuessBox = new HBox();
@@ -158,10 +160,13 @@ public class Workspace extends AppWorkspaceComponent {
         guessedKeys = new FlowPane();
 
         hintGame = new Button("Hint");
+        //  TODO check if this works.
+        //        hintGame.setDisable(!((GameData)app.getDataComponent()).getHintReserved());
         hintGame.setVisible(((GameData)app.getDataComponent()).getDifficulty());
         gameTextsPane.getChildren().setAll(remainingGuessBox, guessedLetters, guessedKeys, hintGame);
 
         figurePane = new Pane();
+
 
         bodyPane.getChildren().setAll(figurePane, gameTextsPane);
     }

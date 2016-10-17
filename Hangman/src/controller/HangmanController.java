@@ -2,7 +2,6 @@ package controller;
 
 import apptemplate.AppTemplate;
 import com.sun.javafx.fxml.PropertyNotFoundException;
-import com.sun.xml.internal.ws.api.pipe.FiberContextSwitchInterceptor;
 import data.GameData;
 import gui.Workspace;
 import javafx.animation.AnimationTimer;
@@ -53,7 +52,7 @@ public class HangmanController implements FileController {
     private Button      gameButton;  // shared reference to the "start game" button
     private Button      hintButton;  //
     private FlowPane    guessedKeys; //
-    private Pane  figurePane;
+    private Pane    figurePane;
     private Label       remains;     // dynamically updated label that indicates the number of remaining guesses
     private Path        workFile;
 
@@ -131,6 +130,8 @@ public class HangmanController implements FileController {
             ((Rectangle)s.getChildren().get(1)).setFill(Color.LIGHTCYAN);
             guessedKeys.getChildren().add(s);
         }
+        figurePane = gameWorkspace.getFigurePane();
+        figurePane.setPrefSize(500,500);
         play();
     }
 
@@ -147,33 +148,15 @@ public class HangmanController implements FileController {
 
                 }
             }
-            Bounds bounds = figurePane.getBoundsInLocal();
-            Bounds screenBounds = figurePane.localToScreen(bounds);
-            int x = (int) screenBounds.getMinX();
-            int y = (int) screenBounds.getMinY();
-            int width = (int) screenBounds.getWidth();
-            int height = (int) screenBounds.getHeight();
-
-            Shape body = new Line(width*0.4,height*0.3, width*0.4, height*0.55);
-            body.setStrokeWidth(5);
-            figurePane.getChildren().add(body);
+            if (!success) {
+                int width = 450;
+                int height = 395;
 
 
-            Shape leftarm = new Line(width*0.4,height*0.35, width*0.3, height*0.4);
-            body.setStrokeWidth(5);
-            figurePane.getChildren().add(leftarm);
-
-            Shape rightarm = new Line(width*0.4,height*0.35, width*0.5, height*0.4);
-            body.setStrokeWidth(5);
-            figurePane.getChildren().add(rightarm);
-
-            Shape leftfoot = new Line(width*0.4,height*0.55, width*0.3, height*0.65);
-            body.setStrokeWidth(5);
-            figurePane.getChildren().add(leftfoot);
-
-            Shape rightfoot = new Line(width*0.4,height*0.55, width*0.5, height*0.65);
-            body.setStrokeWidth(5);
-            figurePane.getChildren().add(rightfoot);
+                Shape rightfoot = new Line(width * 0.4, height * 0.55, width * 0.5, height * 0.65);
+                rightfoot.setStrokeWidth(5);
+                figurePane.getChildren().add(rightfoot);
+            }
 
             PropertyManager           manager    = PropertyManager.getManager();
             AppMessageDialogSingleton dialog     = AppMessageDialogSingleton.getSingleton();
@@ -183,9 +166,6 @@ public class HangmanController implements FileController {
                 dialog.toFront();
             else
                 dialog.show(manager.getPropertyValue(GAME_OVER_TITLE), endMessage);
-
-
-
 
         });
     }
@@ -209,16 +189,15 @@ public class HangmanController implements FileController {
     public void play() {
         disableGameButton();
 
-        Workspace gameWorkspace = (Workspace) appTemplate.getWorkspaceComponent();
-        figurePane = gameWorkspace.getFigurePane();
-        figurePane.setPrefSize(500,500);
-
-        guessedKeys = gameWorkspace.getGuessedKeys();
-
+        for (int i = 9; i >= gamedata.getRemainingGuesses(); i --){
+            // width height are too small.
+            figurePane.getChildren().add(drawGraphic(i));
+        }
 
         AnimationTimer timer = new AnimationTimer() {
             @Override
             public void handle(long now) {
+
                 appTemplate.getGUI().updateWorkspaceToolbar(gamestate.equals(GameState.INITIALIZED_MODIFIED));
                 appTemplate.getGUI().getPrimaryScene().setOnKeyTyped((KeyEvent event) -> {
                     char guess = event.getCharacter().charAt(0);
@@ -254,7 +233,8 @@ public class HangmanController implements FileController {
 
                 if (gamedata.getHintReserved()){
                     hintButton.setOnMouseClicked(e -> {
-                        // TODO hint letter returns somewrong thing. hint letter was in good guess.
+                        // TODO hint letter returns something wrong thing. hint letter was in good guess.
+                        // TODO goodGuess a, hint shows a.
 
                         // find letter in target, AND not in goodGuess
                         char letter_for_hint = hint_letter_finder();
@@ -268,6 +248,7 @@ public class HangmanController implements FileController {
                         ((Rectangle)((StackPane)guessedKeys.getChildren().get(letter_for_hint-'a')).getChildren().get(1)).setFill(Color.AQUA);
                         gamedata.setHintReserved(false);
                         gamedata.setRemainingGuesses(gamedata.getRemainingGuesses()-1);
+                        figurePane.getChildren().add(drawGraphic(gamedata.getRemainingGuesses()));
 
                         hintButton.setDisable(true);
                     });
@@ -297,45 +278,57 @@ public class HangmanController implements FileController {
     }
 
     private Shape drawGraphic(int remainingGuess){
+        figurePane.setPrefSize(500,500);
         Bounds bounds = figurePane.getBoundsInLocal();
         Bounds screenBounds = figurePane.localToScreen(bounds);
-        int x = (int) screenBounds.getMinX();
-        int y = (int) screenBounds.getMinY();
         Shape line;
-        int width = (int) screenBounds.getWidth();
-        int height = (int) screenBounds.getHeight();
+
+
+//        int width = (int) screenBounds.getWidth();
+//        int height = (int) screenBounds.getHeight();
+        // TODO avoid hard cording.
+        int width = 450;
+        int height = 395;
         switch (remainingGuess){
             case 9:
                 line = new Line(0, height*0.8, width, height*0.8);
+                line.setStrokeWidth(3);
                 break;
             case 8:
-                line = new Line(width*0.2,  height*0.8, width*0.2, height*0.6);
+                line = new Line(width*0.2,  height*0.8, width*0.2, 0);
+                line.setStrokeWidth(3);
                 break;
             case 7:
-                line = new Line(width*0.2,   height*0.6, width*0.2, height*0.4);
+                line = new Line(width*0.2,   0, width*0.4, 0 );
+                line.setStrokeWidth(3);
                 break;
             case 6:
-                line = new Line(width*0.2, height*0.4, width*0.2, height*0.2);
+                line = new Line(width*0.4, 0, width*0.4, height*0.2);
+                line.setStrokeWidth(3);
                 break;
             case 5:
-                line = new Line(width*0.2, height*0.2,  width*0.2, 0);
+                line = new Circle(width*0.4,height*0.2+width*0.05,width*0.05);
+                line.setStrokeWidth(5);
                 break;
             case 4:
-                line = new Line(width*0.2, 0, width*0.4, 0);
+                line = new Line(width * 0.4, height * 0.3, width * 0.4, height * 0.55);
+                line.setStrokeWidth(5);
                 break;
             case 3:
-                line = new Line(width*0.4, 0, width*0.4, height*0.1);
+                line = new Line(width * 0.4, height * 0.35, width * 0.3, height * 0.4);
+                line.setStrokeWidth(5);
                 break;
             case 2:
-                line = new Line(width*0.4, height*0.1, width*0.4, height*0.2);
+                line = new Line(width * 0.4, height * 0.35, width * 0.5, height * 0.4);
+                line.setStrokeWidth(5);
                 break;
             case 1:
-                line = new Circle(width*0.4,height*0.2+width*0.05,width*0.05);
+                line = new Line(width * 0.4, height * 0.55, width * 0.3, height * 0.65);
+                line.setStrokeWidth(5);
                 break;
             default:
                 line = new Line();
         }
-        line.setStrokeWidth(3);
         line.setFill(Color.BLACK);
         return line;
     }
@@ -350,7 +343,7 @@ public class HangmanController implements FileController {
 
         HBox remainingGuessBox = gameWorkspace.getRemainingGuessBox();
         remains = new Label(Integer.toString(gamedata.getRemainingGuesses()));
-        remainingGuessBox.getChildren().addAll(new Label("Remaining Guesses: "), remains);
+        remainingGuessBox.getChildren().setAll(new Label("Remaining Guesses: "), remains);
 
         guessedKeys = gameWorkspace.getGuessedKeys();
         for (int i = 'a'; i <= 'z'; i++){
@@ -366,7 +359,13 @@ public class HangmanController implements FileController {
         hintButton = (Button)gameWorkspace.getGameTextsPane().getChildren().get(3);
         hintButton.setVisible(gamedata.getDifficulty());
         hintButton.setDisable(!gamedata.getHintReserved());
+
+        figurePane = gameWorkspace.getFigurePane();
+        figurePane.setPrefSize(500, 500);
+
+
         success = false;
+
         play();
     }
 
@@ -444,25 +443,31 @@ public class HangmanController implements FileController {
     @Override
     public void handleLoadRequest() throws IOException {
         boolean load = true;
-        if (gamestate.equals(GameState.INITIALIZED_MODIFIED))
+
+        if (gamestate.equals(GameState.INITIALIZED_MODIFIED)) {
             load = promptToSave();
+        }
+
         if (load) {
             PropertyManager propertyManager = PropertyManager.getManager();
-            FileChooser     filechooser     = new FileChooser();
-            Path            appDirPath      = Paths.get(propertyManager.getPropertyValue(APP_TITLE)).toAbsolutePath();
-            Path            targetPath      = appDirPath.resolve(APP_WORKDIR_PATH.getParameter());
+            FileChooser filechooser = new FileChooser();
+            Path appDirPath = Paths.get(propertyManager.getPropertyValue(APP_TITLE)).toAbsolutePath();
+            Path targetPath = appDirPath.resolve(APP_WORKDIR_PATH.getParameter());
             filechooser.setInitialDirectory(targetPath.toFile());
             filechooser.setTitle(propertyManager.getPropertyValue(LOAD_WORK_TITLE));
             String description = propertyManager.getPropertyValue(WORK_FILE_EXT_DESC);
-            String extension   = propertyManager.getPropertyValue(WORK_FILE_EXT);
+            String extension = propertyManager.getPropertyValue(WORK_FILE_EXT);
             ExtensionFilter extFilter = new ExtensionFilter(String.format("%s (*.%s)", description, extension),
-                                                            String.format("*.%s", extension));
+                    String.format("*.%s", extension));
             filechooser.getExtensionFilters().add(extFilter);
             File selectedFile = filechooser.showOpenDialog(appTemplate.getGUI().getWindow());
             if (selectedFile != null && selectedFile.exists())
                 load(selectedFile.toPath());
-            restoreGUI(); // restores the GUI to reflect the state in which the loaded game was last saved
+            if (gamedata != null ) {
+                restoreGUI(); // restores the GUI to reflect the state in which the loaded game was last saved
+            }
         }
+
     }
 
     @Override
