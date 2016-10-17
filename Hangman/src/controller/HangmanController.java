@@ -200,7 +200,7 @@ public class HangmanController implements FileController {
 
                 appTemplate.getGUI().updateWorkspaceToolbar(gamestate.equals(GameState.INITIALIZED_MODIFIED));
                 appTemplate.getGUI().getPrimaryScene().setOnKeyTyped((KeyEvent event) -> {
-                    char guess = event.getCharacter().charAt(0);
+                    char guess = event.getCharacter().toLowerCase().charAt(0);
                     if (Character.isLetter(guess) && !alreadyGuessed(guess)) {
 
                         ((Rectangle)((StackPane)guessedKeys.getChildren().get(guess-'a')).getChildren().get(1)).setFill(Color.AQUA);
@@ -233,11 +233,10 @@ public class HangmanController implements FileController {
 
                 if (gamedata.getHintReserved()){
                     hintButton.setOnMouseClicked(e -> {
-                        // TODO hint letter returns something wrong thing. hint letter was in good guess.
-                        // TODO goodGuess a, hint shows a.
 
                         // find letter in target, AND not in goodGuess
                         char letter_for_hint = hint_letter_finder();
+
                         for (int i = 0; i < progress.length; i++) {
                             if (gamedata.getTargetWord().charAt(i) == letter_for_hint) {
                                 progress[i].getChildren().get(2).setVisible(true);
@@ -248,9 +247,19 @@ public class HangmanController implements FileController {
                         ((Rectangle)((StackPane)guessedKeys.getChildren().get(letter_for_hint-'a')).getChildren().get(1)).setFill(Color.AQUA);
                         gamedata.setHintReserved(false);
                         gamedata.setRemainingGuesses(gamedata.getRemainingGuesses()-1);
+
+                        HBox remainingGuessBox = ((Workspace) appTemplate.getWorkspaceComponent()).getRemainingGuessBox();
+                        remains = new Label(Integer.toString(gamedata.getRemainingGuesses()));
+                        remainingGuessBox.getChildren().setAll(new Label("Remaining Guesses: "), remains);
+
+                        // TODO the num remainingguess not changing ... the data part is fine.
+                        gamedata.addGoodGuess(letter_for_hint);
+
                         figurePane.getChildren().add(drawGraphic(gamedata.getRemainingGuesses()));
 
                         hintButton.setDisable(true);
+
+                        setGameState(GameState.INITIALIZED_MODIFIED);
                     });
                 }
             }
@@ -266,7 +275,7 @@ public class HangmanController implements FileController {
 
     private char hint_letter_finder(){
         for (int letter = 'a'; letter <= 'z'; letter ++){
-            if (!gamedata.getGoodGuesses().contains(letter)){
+            if (!gamedata.getGoodGuesses().contains((char)letter)){
                 for (int i = 0; i < gamedata.getTargetWord().length(); i ++) {
                     if (gamedata.getTargetWord().charAt(i) == letter) {
                         return (char)letter;
@@ -279,58 +288,54 @@ public class HangmanController implements FileController {
 
     private Shape drawGraphic(int remainingGuess){
         figurePane.setPrefSize(500,500);
-        Bounds bounds = figurePane.getBoundsInLocal();
-        Bounds screenBounds = figurePane.localToScreen(bounds);
-        Shape line;
 
+        Shape shape;
 
-//        int width = (int) screenBounds.getWidth();
-//        int height = (int) screenBounds.getHeight();
         // TODO avoid hard cording.
         int width = 450;
         int height = 395;
         switch (remainingGuess){
             case 9:
-                line = new Line(0, height*0.8, width, height*0.8);
-                line.setStrokeWidth(3);
+                shape = new Line(width*0.1, height*0.8, width, height*0.8);
+                shape.setStrokeWidth(3);
                 break;
             case 8:
-                line = new Line(width*0.2,  height*0.8, width*0.2, 0);
-                line.setStrokeWidth(3);
+                shape = new Line(width*0.2,  height*0.8, width*0.2, 0);
+                shape.setStrokeWidth(3);
                 break;
             case 7:
-                line = new Line(width*0.2,   0, width*0.4, 0 );
-                line.setStrokeWidth(3);
+                shape = new Line(width*0.2,   0, width*0.4, 0 );
+                shape.setStrokeWidth(3);
                 break;
             case 6:
-                line = new Line(width*0.4, 0, width*0.4, height*0.2);
-                line.setStrokeWidth(3);
+                shape = new Line(width*0.4, 0, width*0.4, height*0.2);
+                shape.setStrokeWidth(3);
                 break;
             case 5:
-                line = new Circle(width*0.4,height*0.2+width*0.05,width*0.05);
-                line.setStrokeWidth(5);
+                shape = new Circle(width*0.4,height*0.2+width*0.05,width*0.05);
+                shape.setStrokeWidth(5);
                 break;
             case 4:
-                line = new Line(width * 0.4, height * 0.3, width * 0.4, height * 0.55);
-                line.setStrokeWidth(5);
+                shape = new Line(width * 0.4, height * 0.3, width * 0.4, height * 0.55);
+                shape.setStrokeWidth(5);
                 break;
             case 3:
-                line = new Line(width * 0.4, height * 0.35, width * 0.3, height * 0.4);
-                line.setStrokeWidth(5);
+                shape = new Line(width * 0.4, height * 0.35, width * 0.3, height * 0.4);
+                shape.setStrokeWidth(5);
                 break;
             case 2:
-                line = new Line(width * 0.4, height * 0.35, width * 0.5, height * 0.4);
-                line.setStrokeWidth(5);
+                shape = new Line(width * 0.4, height * 0.35, width * 0.5, height * 0.4);
+                shape.setStrokeWidth(5);
                 break;
             case 1:
-                line = new Line(width * 0.4, height * 0.55, width * 0.3, height * 0.65);
-                line.setStrokeWidth(5);
+                shape = new Line(width * 0.4, height * 0.55, width * 0.3, height * 0.65);
+                shape.setStrokeWidth(5);
                 break;
             default:
-                line = new Line();
+                shape = new Line();
         }
-        line.setFill(Color.BLACK);
-        return line;
+        shape.setFill(Color.BLACK);
+        return shape;
     }
 
     private void restoreGUI() {
