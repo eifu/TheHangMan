@@ -12,6 +12,7 @@ import java.util.Set;
 
 /**
  * @author Ritwik Banerjee
+ * @author Eifu Tomita
  */
 public class GameDataFile implements AppFileComponent {
 

@@ -27,6 +27,7 @@ import static hangman.HangmanProperties.*;
  * This class serves as the GUI component for the Hangman game.
  *
  * @author Ritwik Banerjee
+ * @author Eifu Tomita
  */
 public class Workspace extends AppWorkspaceComponent {
 

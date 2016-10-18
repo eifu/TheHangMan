@@ -16,6 +16,7 @@ import java.util.stream.Stream;
 
 /**
  * @author Ritwik Banerjee
+ * @author Eifu Tomita
  */
 public class GameData implements AppDataComponent {
 
