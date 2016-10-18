@@ -152,9 +152,8 @@ public class HangmanController implements FileController {
                 int width = 450;
                 int height = 395;
 
-
                 Shape rightfoot = new Line(width * 0.4, height * 0.55, width * 0.5, height * 0.65);
-                rightfoot.setStrokeWidth(5);
+                rightfoot.setStrokeWidth(7);
                 figurePane.getChildren().add(rightfoot);
             }
 
@@ -252,7 +251,6 @@ public class HangmanController implements FileController {
                         remains = new Label(Integer.toString(gamedata.getRemainingGuesses()));
                         remainingGuessBox.getChildren().setAll(new Label("Remaining Guesses: "), remains);
 
-                        // TODO the num remainingguess not changing ... the data part is fine.
                         gamedata.addGoodGuess(letter_for_hint);
 
                         figurePane.getChildren().add(drawGraphic(gamedata.getRemainingGuesses()));
@@ -297,44 +295,51 @@ public class HangmanController implements FileController {
         switch (remainingGuess){
             case 9:
                 shape = new Line(width*0.1, height*0.8, width, height*0.8);
-                shape.setStrokeWidth(3);
+                shape.setStrokeWidth(5);
+                shape.setFill(Color.BLACK);
                 break;
             case 8:
                 shape = new Line(width*0.2,  height*0.8, width*0.2, 0);
-                shape.setStrokeWidth(3);
+                shape.setStrokeWidth(5);
+                shape.setFill(Color.BLACK);
                 break;
             case 7:
                 shape = new Line(width*0.2,   0, width*0.4, 0 );
-                shape.setStrokeWidth(3);
+                shape.setStrokeWidth(5);
+                shape.setFill(Color.BLACK);
                 break;
             case 6:
                 shape = new Line(width*0.4, 0, width*0.4, height*0.2);
-                shape.setStrokeWidth(3);
+                shape.setStrokeWidth(5);
+                shape.setFill(Color.BLACK);
                 break;
             case 5:
                 shape = new Circle(width*0.4,height*0.2+width*0.05,width*0.05);
-                shape.setStrokeWidth(5);
+                shape.setStrokeWidth(7);
                 break;
             case 4:
                 shape = new Line(width * 0.4, height * 0.3, width * 0.4, height * 0.55);
-                shape.setStrokeWidth(5);
+                shape.setStrokeWidth(7);
+                shape.setFill(Color.BLACK);
                 break;
             case 3:
                 shape = new Line(width * 0.4, height * 0.35, width * 0.3, height * 0.4);
-                shape.setStrokeWidth(5);
+                shape.setStrokeWidth(7);
+                shape.setFill(Color.BLACK);
                 break;
             case 2:
                 shape = new Line(width * 0.4, height * 0.35, width * 0.5, height * 0.4);
-                shape.setStrokeWidth(5);
+                shape.setStrokeWidth(7);
+                shape.setFill(Color.BLACK);
                 break;
             case 1:
                 shape = new Line(width * 0.4, height * 0.55, width * 0.3, height * 0.65);
-                shape.setStrokeWidth(5);
+                shape.setStrokeWidth(7);
+                shape.setFill(Color.BLACK);
                 break;
             default:
                 shape = new Line();
         }
-        shape.setFill(Color.BLACK);
         return shape;
     }
 
@@ -468,7 +473,7 @@ public class HangmanController implements FileController {
             File selectedFile = filechooser.showOpenDialog(appTemplate.getGUI().getWindow());
             if (selectedFile != null && selectedFile.exists())
                 load(selectedFile.toPath());
-            if (gamedata != null ) {
+            if (selectedFile != null && gamedata != null) {
                 restoreGUI(); // restores the GUI to reflect the state in which the loaded game was last saved
             }
         }
@@ -501,10 +506,10 @@ public class HangmanController implements FileController {
         yesNoCancelDialog.show(propertyManager.getPropertyValue(SAVE_UNSAVED_WORK_TITLE),
                                propertyManager.getPropertyValue(SAVE_UNSAVED_WORK_MESSAGE));
 
-        if (yesNoCancelDialog.getSelection().equals(YesNoCancelDialogSingleton.YES))
+        if (yesNoCancelDialog.getSelection()!=null && yesNoCancelDialog.getSelection().equals(YesNoCancelDialogSingleton.YES))
             handleSaveRequest();
 
-        return !yesNoCancelDialog.getSelection().equals(YesNoCancelDialogSingleton.CANCEL);
+        return yesNoCancelDialog.getSelection()!=null && !yesNoCancelDialog.getSelection().equals(YesNoCancelDialogSingleton.CANCEL);
     }
 
     /**
