@@ -6,6 +6,7 @@ package settings;
 public enum InitializationParameters {
 
     APP_PROPERTIES_XML("app-properties.xml"),
+    JAPANESE_APP_PROPERTIES_XML("japanese-app-properties.xml"),
     WORKSPACE_PROPERTIES_XML("workspace-properties.xml"),
     PROPERTIES_SCHEMA_XSD("properties-schema.xsd"),
     CLOSE_LABEL("CLOSE"),

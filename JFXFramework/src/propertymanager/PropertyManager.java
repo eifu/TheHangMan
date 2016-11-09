@@ -8,7 +8,12 @@ import xmlutils.XMLUtilities;
 
 import java.io.File;
 import java.net.URL;
-import java.util.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.NoSuchElementException;
+import java.util.ArrayList;
+//import java.util.;
 
 /**
  * @author Ritwik Banerjee
@@ -19,7 +24,7 @@ public class PropertyManager {
 
     private static PropertyManager singleton = null;
 
-    private Map<String, String>       properties;
+    private Map<String, String> properties;
     private Map<String, List<String>> propertyOptions;
 
     // Constants critical to the loading of elements and their attributes from the XML files

@@ -1,5 +1,7 @@
 package apptemplate;
 
+import com.sun.org.apache.xml.internal.security.Init;
+import com.sun.tools.internal.xjc.Language;
 import components.AppComponentsBuilder;
 import components.AppDataComponent;
 import components.AppFileComponent;
@@ -10,6 +12,7 @@ import propertymanager.PropertyManager;
 import settings.InitializationParameters;
 import ui.AppGUI;
 import ui.AppMessageDialogSingleton;
+import ui.LanguageDialogSingleton;
 import ui.YesNoCancelDialogSingleton;
 import xmlutils.InvalidXMLFileFormatException;
 
@@ -29,6 +32,7 @@ public abstract class AppTemplate extends Application {
     private AppFileComponent      fileComponent; // to manage the app's file I/O
     private AppWorkspaceComponent workspaceComponent; // to manage the app's GUI workspace
     private AppGUI                gui;
+    private static InitializationParameters language;
 
     public String getFileControllerClass() {
         return "AppFileController";
@@ -59,8 +63,16 @@ public abstract class AppTemplate extends Application {
         messageDialog.init(primaryStage);
         yesNoDialog.init(primaryStage);
 
+        LanguageDialogSingleton langDialog = LanguageDialogSingleton.getSingleton();
+        langDialog.init(primaryStage);
+        langDialog.show("Language", "which one to choose?");
+        if (langDialog.getSelection()!=null && langDialog.getSelection().equals(LanguageDialogSingleton.English)){
+            language = APP_PROPERTIES_XML;
+        } else {
+            language = JAPANESE_APP_PROPERTIES_XML;
+        }
         try {
-            if (loadProperties(APP_PROPERTIES_XML) && loadProperties(WORKSPACE_PROPERTIES_XML)) {
+            if (loadProperties(language) && loadProperties(WORKSPACE_PROPERTIES_XML)) {
                 AppComponentsBuilder builder = makeAppBuilderHook();
 
                 fileComponent = builder.buildFileComponent();
